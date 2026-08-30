@@ -25,3 +25,8 @@ server:
   port: ${PORT:8080}
   error:
     include-message: never
+
+app:
+  auth:
+    issuer: ${JWT_ISSUER:nexus-auth}
+    jwt-secret-base64: ${JWT_SECRET_BASE64}
