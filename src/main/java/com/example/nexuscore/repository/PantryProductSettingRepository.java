@@ -1,0 +1,13 @@
+package com.example.nexuscore.repository;
+
+import com.example.nexuscore.model.PantryProductSetting;
+import java.util.List;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface PantryProductSettingRepository extends JpaRepository<PantryProductSetting, Integer> {
+
+    List<PantryProductSetting> findByProfileId(Integer profileId);
+
+    Optional<PantryProductSetting> findByProfileIdAndFoodId(Integer profileId, Integer foodId);
+}
