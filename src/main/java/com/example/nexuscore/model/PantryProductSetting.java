@@ -37,7 +37,8 @@ public class PantryProductSetting {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    protected PantryProductSetting() {}
+    protected PantryProductSetting() {
+    }
 
     public PantryProductSetting(Food food, Profile profile, Integer minimumQuantity) {
         this.food = food;
@@ -45,12 +46,26 @@ public class PantryProductSetting {
         this.minimumQuantity = minimumQuantity;
     }
 
-    public Integer getId() { return id; }
-    public Food getFood() { return food; }
-    public Profile getProfile() { return profile; }
-    public Integer getMinimumQuantity() { return minimumQuantity; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public Integer getId() {
+        return id;
+    }
+    public Food getFood() {
+        return food;
+    }
+    public Profile getProfile() {
+        return profile;
+    }
+    public Integer getMinimumQuantity() {
+        return minimumQuantity;
+    }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
 
-    public void setMinimumQuantity(Integer minimumQuantity) { this.minimumQuantity = minimumQuantity; }
+    public void setMinimumQuantity(Integer minimumQuantity) {
+        this.minimumQuantity = minimumQuantity;
+    }
 }

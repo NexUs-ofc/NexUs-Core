@@ -10,8 +10,8 @@ import com.example.nexuscore.exception.NotFoundException;
 import com.example.nexuscore.model.ShoppingList;
 import com.example.nexuscore.model.ShoppingListItem;
 import com.example.nexuscore.repository.ShoppingListRepository;
-import java.util.List;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 public class ShoppingListService {
@@ -53,11 +53,16 @@ public class ShoppingListService {
         return toResponse(repository.save(list));
     }
 
-    public ShoppingListResponse updateItem(Integer householdId, String id, String itemId, ShoppingListItemUpdateRequest request) {
+    public ShoppingListResponse updateItem(Integer householdId, String id, String itemId,
+                                            ShoppingListItemUpdateRequest request) {
         ShoppingList list = findOwned(householdId, id);
         ShoppingListItem item = findItem(list, itemId);
-        if (request.quantity() != null) item.setQuantity(request.quantity());
-        if (request.checked() != null) item.setChecked(request.checked());
+        if (request.quantity() != null) {
+            item.setQuantity(request.quantity());
+        }
+        if (request.checked() != null) {
+            item.setChecked(request.checked());
+        }
         return toResponse(repository.save(list));
     }
 

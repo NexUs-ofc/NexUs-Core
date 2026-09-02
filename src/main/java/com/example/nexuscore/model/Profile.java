@@ -9,9 +9,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "profile")
@@ -46,14 +46,31 @@ public class Profile {
     @Column(nullable = false, columnDefinition = "profile_status_enum")
     private ProfileStatus status;
 
-    protected Profile() {}
+    protected Profile() {
+    }
 
-    public Integer getId() { return id; }
-    public Address getAddress() { return address; }
-    public String getEmail() { return email; }
-    public String getName() { return name; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public ProfileType getType() { return type; }
-    public String getProfileImageUrl() { return profileImageUrl; }
-    public ProfileStatus getStatus() { return status; }
+    public Integer getId() {
+        return id;
+    }
+    public Address getAddress() {
+        return address;
+    }
+    public String getEmail() {
+        return email;
+    }
+    public String getName() {
+        return name;
+    }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+    public ProfileType getType() {
+        return type;
+    }
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+    public ProfileStatus getStatus() {
+        return status;
+    }
 }

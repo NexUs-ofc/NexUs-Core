@@ -18,10 +18,10 @@ import com.example.nexuscore.repository.FoodRepository;
 import com.example.nexuscore.repository.PantryItemRepository;
 import com.example.nexuscore.repository.PantryProductSettingRepository;
 import com.example.nexuscore.repository.ProfileRepository;
-import java.time.LocalDate;
-import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -60,7 +60,8 @@ public class StockService {
     public List<PantryProductSettingResponse> missing(Integer profileId) {
         return settingRepository.findByProfileId(profileId).stream()
                 .filter(setting -> {
-                    Integer current = pantryItemRepository.sumQuantityByProfileIdAndFoodId(profileId, setting.getFood().getId());
+                    Integer current = pantryItemRepository
+                            .sumQuantityByProfileIdAndFoodId(profileId, setting.getFood().getId());
                     return current < setting.getMinimumQuantity();
                 })
                 .map(setting -> new PantryProductSettingResponse(
@@ -94,8 +95,12 @@ public class StockService {
     @Transactional
     public StockItemResponse update(Integer profileId, Integer itemId, StockItemUpdateRequest request) {
         PantryItem item = findOwnedItem(profileId, itemId);
-        if (request.quantity() != null) item.setQuantity(request.quantity());
-        if (request.expiryDate() != null) item.setExpiryDate(request.expiryDate());
+        if (request.quantity() != null) {
+            item.setQuantity(request.quantity());
+        }
+        if (request.expiryDate() != null) {
+            item.setExpiryDate(request.expiryDate());
+        }
         return toResponse(item);
     }
 
@@ -106,14 +111,17 @@ public class StockService {
     }
 
     @Transactional
-    public PantryProductSettingResponse setMinimumQuantity(Integer profileId, Integer foodId, MinimumQuantityRequest request) {
+    public PantryProductSettingResponse setMinimumQuantity(Integer profileId, Integer foodId,
+                                                              MinimumQuantityRequest request) {
         Food food = foodRepository.findById(foodId)
                 .orElseThrow(() -> new NotFoundException("Alimento nao encontrado: " + foodId));
         PantryProductSetting setting = settingRepository.findByProfileIdAndFoodId(profileId, foodId)
-                .orElseGet(() -> new PantryProductSetting(food, profileRepository.getReferenceById(profileId), request.minimumQuantity()));
+                .orElseGet(() -> new PantryProductSetting(food,
+                        profileRepository.getReferenceById(profileId), request.minimumQuantity()));
         setting.setMinimumQuantity(request.minimumQuantity());
         PantryProductSetting saved = settingRepository.save(setting);
-        return new PantryProductSettingResponse(saved.getFood().getId(), saved.getFood().getName(), saved.getMinimumQuantity());
+        return new PantryProductSettingResponse(saved.getFood().getId(),
+                saved.getFood().getName(), saved.getMinimumQuantity());
     }
 
     private PantryItem findOwnedItem(Integer profileId, Integer itemId) {

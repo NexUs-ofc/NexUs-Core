@@ -37,7 +37,8 @@ public class PantryItem {
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    protected PantryItem() {}
+    protected PantryItem() {
+    }
 
     public PantryItem(Food food, Profile profile, Integer quantity, LocalDate expiryDate) {
         this.food = food;
@@ -46,13 +47,29 @@ public class PantryItem {
         this.expiryDate = expiryDate;
     }
 
-    public Integer getId() { return id; }
-    public Food getFood() { return food; }
-    public Profile getProfile() { return profile; }
-    public Integer getQuantity() { return quantity; }
-    public LocalDate getExpiryDate() { return expiryDate; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public Integer getId() {
+        return id;
+    }
+    public Food getFood() {
+        return food;
+    }
+    public Profile getProfile() {
+        return profile;
+    }
+    public Integer getQuantity() {
+        return quantity;
+    }
+    public LocalDate getExpiryDate() {
+        return expiryDate;
+    }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 
-    public void setQuantity(Integer quantity) { this.quantity = quantity; }
-    public void setExpiryDate(LocalDate expiryDate) { this.expiryDate = expiryDate; }
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+    public void setExpiryDate(LocalDate expiryDate) {
+        this.expiryDate = expiryDate;
+    }
 }
