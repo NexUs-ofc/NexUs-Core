@@ -1,10 +1,10 @@
 package com.example.nexuscore.model;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 @Document(collection = "shopping_list")
 public class ShoppingList {
@@ -23,7 +23,8 @@ public class ShoppingList {
     @Field("array_list")
     private List<ShoppingListItem> arrayList = new ArrayList<>();
 
-    protected ShoppingList() {}
+    protected ShoppingList() {
+    }
 
     public ShoppingList(Integer householdId, String title, String eventId) {
         this.householdId = householdId;
@@ -31,11 +32,23 @@ public class ShoppingList {
         this.eventId = eventId;
     }
 
-    public String getId() { return id; }
-    public Integer getHouseholdId() { return householdId; }
-    public String getTitle() { return title; }
-    public String getEventId() { return eventId; }
-    public List<ShoppingListItem> getArrayList() { return arrayList; }
+    public String getId() {
+        return id;
+    }
+    public Integer getHouseholdId() {
+        return householdId;
+    }
+    public String getTitle() {
+        return title;
+    }
+    public String getEventId() {
+        return eventId;
+    }
+    public List<ShoppingListItem> getArrayList() {
+        return arrayList;
+    }
 
-    public void setTitle(String title) { this.title = title; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 }

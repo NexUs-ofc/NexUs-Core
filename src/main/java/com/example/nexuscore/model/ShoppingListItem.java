@@ -11,7 +11,8 @@ public class ShoppingListItem {
     private String unitOfMeasure;
     private boolean checked;
 
-    protected ShoppingListItem() {}
+    protected ShoppingListItem() {
+    }
 
     public ShoppingListItem(Integer foodId, String name, Double quantity, String unitOfMeasure, boolean checked) {
         this.id = UUID.randomUUID().toString();
@@ -22,13 +23,29 @@ public class ShoppingListItem {
         this.checked = checked;
     }
 
-    public String getId() { return id; }
-    public Integer getFoodId() { return foodId; }
-    public String getName() { return name; }
-    public Double getQuantity() { return quantity; }
-    public String getUnitOfMeasure() { return unitOfMeasure; }
-    public boolean isChecked() { return checked; }
+    public String getId() {
+        return id;
+    }
+    public Integer getFoodId() {
+        return foodId;
+    }
+    public String getName() {
+        return name;
+    }
+    public Double getQuantity() {
+        return quantity;
+    }
+    public String getUnitOfMeasure() {
+        return unitOfMeasure;
+    }
+    public boolean isChecked() {
+        return checked;
+    }
 
-    public void setQuantity(Double quantity) { this.quantity = quantity; }
-    public void setChecked(boolean checked) { this.checked = checked; }
+    public void setQuantity(Double quantity) {
+        this.quantity = quantity;
+    }
+    public void setChecked(boolean checked) {
+        this.checked = checked;
+    }
 }

@@ -18,8 +18,13 @@ public class Category {
     @Column(name = "category_name", nullable = false, unique = true, length = 100)
     private String categoryName;
 
-    protected Category() {}
+    protected Category() {
+    }
 
-    public Integer getId() { return id; }
-    public String getCategoryName() { return categoryName; }
+    public Integer getId() {
+        return id;
+    }
+    public String getCategoryName() {
+        return categoryName;
+    }
 }

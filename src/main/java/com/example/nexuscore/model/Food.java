@@ -11,9 +11,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.math.BigDecimal;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "food")
@@ -41,12 +41,25 @@ public class Food {
     @Column(name = "unit_of_measure", nullable = false, columnDefinition = "unit_of_measure_enum")
     private UnitOfMeasure unitOfMeasure;
 
-    protected Food() {}
+    protected Food() {
+    }
 
-    public Integer getId() { return id; }
-    public String getName() { return name; }
-    public Category getCategory() { return category; }
-    public String getProductBrand() { return productBrand; }
-    public BigDecimal getPackageQuantity() { return packageQuantity; }
-    public UnitOfMeasure getUnitOfMeasure() { return unitOfMeasure; }
+    public Integer getId() {
+        return id;
+    }
+    public String getName() {
+        return name;
+    }
+    public Category getCategory() {
+        return category;
+    }
+    public String getProductBrand() {
+        return productBrand;
+    }
+    public BigDecimal getPackageQuantity() {
+        return packageQuantity;
+    }
+    public UnitOfMeasure getUnitOfMeasure() {
+        return unitOfMeasure;
+    }
 }

@@ -1,8 +1,8 @@
 package com.example.nexuscore.repository;
 
 import com.example.nexuscore.model.ShoppingList;
-import java.util.List;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import java.util.List;
 
 public interface ShoppingListRepository extends MongoRepository<ShoppingList, String> {
 

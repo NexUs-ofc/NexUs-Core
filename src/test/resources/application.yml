@@ -1,0 +1,23 @@
+spring:
+  main:
+    lazy-initialization: true
+  datasource:
+    url: jdbc:postgresql://localhost:1/nexus_core_test
+    username: test
+    password: test
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate.boot.allow_jdbc_metadata_access: false
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/nexus_core_test
+      database: nexus_core_test
+
+app:
+  auth:
+    issuer: nexus-core-test
+    jwt-secret-base64: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=

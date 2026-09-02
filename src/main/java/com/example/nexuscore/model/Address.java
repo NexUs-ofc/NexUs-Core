@@ -6,9 +6,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.math.BigDecimal;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "address")
@@ -44,15 +44,34 @@ public class Address {
     @Column(precision = 9, scale = 6)
     private BigDecimal longitude;
 
-    protected Address() {}
+    protected Address() {
+    }
 
-    public Integer getId() { return id; }
-    public String getNeighborhood() { return neighborhood; }
-    public String getStreet() { return street; }
-    public String getNumber() { return number; }
-    public String getCep() { return cep; }
-    public String getCity() { return city; }
-    public String getState() { return state; }
-    public BigDecimal getLatitude() { return latitude; }
-    public BigDecimal getLongitude() { return longitude; }
+    public Integer getId() {
+        return id;
+    }
+    public String getNeighborhood() {
+        return neighborhood;
+    }
+    public String getStreet() {
+        return street;
+    }
+    public String getNumber() {
+        return number;
+    }
+    public String getCep() {
+        return cep;
+    }
+    public String getCity() {
+        return city;
+    }
+    public String getState() {
+        return state;
+    }
+    public BigDecimal getLatitude() {
+        return latitude;
+    }
+    public BigDecimal getLongitude() {
+        return longitude;
+    }
 }
