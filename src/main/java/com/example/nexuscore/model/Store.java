@@ -35,6 +35,12 @@ public class Store {
 
     protected Store() {}
 
+    public Store(String cnpj, Company company, Profile profile) {
+        this.cnpj = cnpj;
+        this.company = company;
+        this.profile = profile;
+    }
+
     public Integer getId() { return id; }
     public String getCnpj() { return cnpj; }
     public Company getCompany() { return company; }
