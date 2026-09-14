@@ -1,6 +1,16 @@
 package com.example.nexuscore.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
@@ -71,11 +81,17 @@ public class Profile {
     public ProfileStatus getStatus() {
         return status;
     }
-    public Set<String> getPhones() {return phones;}
+    public Set<String> getPhones() {
+        return phones;
+    }
 
-    public void setName(String name) {this.name = name;}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public void setProfileImageUrl(String profileImageUrl) {this.profileImageUrl = profileImageUrl;}
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
 
     public void updatePhones(Set<String> phones) {
         this.phones.clear();

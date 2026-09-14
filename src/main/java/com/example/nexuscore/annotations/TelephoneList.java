@@ -3,7 +3,6 @@ package com.example.nexuscore.annotations;
 import com.example.nexuscore.util.TelephoneListValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

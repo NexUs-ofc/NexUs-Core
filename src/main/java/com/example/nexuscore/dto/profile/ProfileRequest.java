@@ -3,7 +3,6 @@ package com.example.nexuscore.dto.profile;
 import com.example.nexuscore.annotations.TelephoneList;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
 import java.util.List;
 
 public record ProfileRequest(
