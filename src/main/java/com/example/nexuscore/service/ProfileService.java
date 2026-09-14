@@ -9,7 +9,6 @@ import com.example.nexuscore.model.Profile;
 import com.example.nexuscore.repository.ProfileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.LinkedHashSet;
 import java.util.List;
 
