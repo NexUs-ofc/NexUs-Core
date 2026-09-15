@@ -1,6 +1,8 @@
 package com.example.nexuscore.model;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -12,6 +14,8 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "profile")
@@ -46,8 +50,12 @@ public class Profile {
     @Column(nullable = false, columnDefinition = "profile_status_enum")
     private ProfileStatus status;
 
-    protected Profile() {
-    }
+    @Column(name = "phone", length = 16)
+    @CollectionTable(name = "profile_phone", joinColumns = @JoinColumn(name = "profile_id"))
+    @ElementCollection
+    private Set<String> phones = new LinkedHashSet<>();
+
+    protected Profile() {}
 
     public Integer getId() {
         return id;
@@ -72,5 +80,21 @@ public class Profile {
     }
     public ProfileStatus getStatus() {
         return status;
+    }
+    public Set<String> getPhones() {
+        return phones;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
+
+    public void updatePhones(Set<String> phones) {
+        this.phones.clear();
+        this.phones.addAll(phones);
     }
 }
