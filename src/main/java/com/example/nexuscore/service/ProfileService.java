@@ -1,16 +1,14 @@
 package com.example.nexuscore.service;
 
-import com.example.nexuscore.dto.profile.AddressResponse;
 import com.example.nexuscore.dto.profile.ProfileRequest;
 import com.example.nexuscore.dto.profile.ProfileResponse;
 import com.example.nexuscore.exception.NotFoundException;
-import com.example.nexuscore.model.Address;
+import com.example.nexuscore.mapper.ProfileMapper;
 import com.example.nexuscore.model.Profile;
 import com.example.nexuscore.repository.ProfileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.LinkedHashSet;
-import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -23,7 +21,7 @@ public class ProfileService {
     }
 
     public ProfileResponse get(Integer profileId) {
-        return toResponse(findProfile(profileId));
+        return ProfileMapper.toResponse(findProfile(profileId));
     }
 
     @Transactional
@@ -38,7 +36,7 @@ public class ProfileService {
         if (request.phones() != null) {
             profile.updatePhones(new LinkedHashSet<>(request.phones()));
         }
-        return toResponse(profile);
+        return ProfileMapper.toResponse(profile);
     }
 
     private Profile findProfile(Integer profileId) {
@@ -46,18 +44,5 @@ public class ProfileService {
                 .orElseThrow(() -> new NotFoundException("Perfil nao encontrado: " + profileId));
     }
 
-    private ProfileResponse toResponse(Profile profile) {
-        Address address = profile.getAddress();
-        return new ProfileResponse(
-                profile.getId(),
-                profile.getName(),
-                profile.getEmail(),
-                profile.getType(),
-                profile.getStatus(),
-                profile.getProfileImageUrl(),
-                profile.getCreatedAt(),
-                List.copyOf(profile.getPhones()),
-                new AddressResponse(address.getStreet(), address.getNumber(), address.getNeighborhood(),
-                        address.getCep(), address.getCity(), address.getState()));
-    }
+
 }
