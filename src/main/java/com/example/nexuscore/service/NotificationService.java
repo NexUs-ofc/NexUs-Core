@@ -1,13 +1,12 @@
 package com.example.nexuscore.service;
 
 import com.example.nexuscore.dto.notification.NotificationResponse;
-import com.example.nexuscore.exception.ForbiddenException;
 import com.example.nexuscore.exception.NotFoundException;
 import com.example.nexuscore.model.Notification;
 import com.example.nexuscore.repository.NotificationRepository;
-import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -24,11 +23,8 @@ public class NotificationService {
     }
 
     public NotificationResponse get(Integer profileId, Integer id) {
-        Notification notification = repository.findById(id)
+        Notification notification = repository.findByIdAndProfileId(id, profileId)
                 .orElseThrow(() -> new NotFoundException("Notificacao nao encontrada: " + id));
-        if (!notification.getProfile().getId().equals(profileId)) {
-            throw new ForbiddenException("Notificacao nao pertence ao perfil autenticado");
-        }
         return toResponse(notification);
     }
 

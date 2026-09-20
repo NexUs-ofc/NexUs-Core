@@ -3,11 +3,11 @@ package com.example.nexuscore.controller;
 import com.example.nexuscore.dto.notification.NotificationResponse;
 import com.example.nexuscore.service.NotificationService;
 import com.example.nexuscore.util.CurrentProfileResolver;
-import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/notifications")

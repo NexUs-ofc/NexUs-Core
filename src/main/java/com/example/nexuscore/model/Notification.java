@@ -40,11 +40,31 @@ public class Notification {
 
     protected Notification() {}
 
-    public Integer getId() { return id; }
-    public Profile getProfile() { return profile; }
-    public String getTitle() { return title; }
-    public String getMessage() { return message; }
-    public String getType() { return type; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getReadAt() { return readAt; }
+    public Integer getId() {
+        return id;
+    }
+
+    public Profile getProfile() {
+        return profile;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getReadAt() {
+        return readAt;
+    }
 }
