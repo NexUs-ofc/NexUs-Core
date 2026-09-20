@@ -45,12 +45,6 @@ public class StoreService {
         return repository.findAll().stream().map(this::toResponse).toList();
     }
 
-    /**
-     * Lojas mais proximas de um ponto de origem. O endereco de origem e opcional: se informado,
-     * e geocodado sob demanda (Nominatim); caso contrario, usa o endereco ja cadastrado do
-     * perfil autenticado. As lojas ja tem lat/lng persistidos desde o cadastro, entao a busca
-     * continua sendo uma unica query Haversine, sem geocodificar loja por loja a cada request.
-     */
     public List<StoreResponse> nearby(Integer profileId, String street, String number, String neighborhood,
                                        String city, String state, Double radiusKm) {
         Optional<GeoPoint> point = hasAddress(street)
@@ -73,11 +67,6 @@ public class StoreService {
         return toResponse(store);
     }
 
-    /**
-     * Cadastra uma loja para a empresa autenticada. O endereco do perfil da loja (ja existente,
-     * criado no fluxo de cadastro de conta) e geocodado uma unica vez neste momento e o
-     * resultado e persistido - nao e recalculado a cada busca.
-     */
     @Transactional
     public StoreResponse create(Integer currentProfileId, StoreCreateRequest request) {
         Company company = companyRepository.findByProfileId(currentProfileId)

@@ -10,12 +10,6 @@ import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.Optional;
 
-/**
- * Geocodificacao via Nominatim (OpenStreetMap) - gratuito, sem necessidade de API key/billing.
- * Sujeito ao rate limit de 1 requisicao/segundo da politica de uso justo do provedor
- * (https://operations.osmfoundation.org/policies/nominatim/), por isso e usado apenas para o
- * ponto de origem de uma busca ou no cadastro pontual de uma loja - nunca em lote.
- */
 @Service
 public class NominatimGeocodingService implements GeocodingService {
 
