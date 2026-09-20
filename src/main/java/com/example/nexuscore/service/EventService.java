@@ -6,17 +6,22 @@ import com.example.nexuscore.exception.ForbiddenException;
 import com.example.nexuscore.exception.NotFoundException;
 import com.example.nexuscore.model.Event;
 import com.example.nexuscore.model.EventRecipe;
+import com.example.nexuscore.model.Recipe;
 import com.example.nexuscore.repository.EventRepository;
-import java.util.List;
+import com.example.nexuscore.repository.RecipeRepository;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 public class EventService {
 
     private final EventRepository repository;
+    private final RecipeRepository recipeRepository;
 
-    public EventService(EventRepository repository) {
+    public EventService(EventRepository repository, RecipeRepository recipeRepository) {
         this.repository = repository;
+        this.recipeRepository = recipeRepository;
     }
 
     public List<EventResponse> list(Integer householdId) {
@@ -50,21 +55,27 @@ public class EventService {
 
     public EventResponse linkRecipe(Integer householdId, String id, String recipeId) {
         Event event = findOwned(householdId, id);
-        boolean alreadyLinked = event.getRecipes().stream().anyMatch(r -> r.getRecipeId().equals(recipeId));
+        ObjectId objectId = parseId(recipeId, "Receita nao encontrada: ");
+        Recipe recipe = recipeRepository.findById(objectId)
+                .orElseThrow(() -> new NotFoundException("Receita nao encontrada: " + recipeId));
+        boolean alreadyLinked = event.getRecipes().stream()
+                .anyMatch(link -> link.getRecipeId().equals(objectId));
         if (!alreadyLinked) {
-            event.getRecipes().add(new EventRecipe(recipeId));
+            event.getRecipes().add(new EventRecipe(objectId, recipe.getTitle()));
         }
         return toResponse(repository.save(event));
     }
 
     public EventResponse unlinkRecipe(Integer householdId, String id, String recipeId) {
         Event event = findOwned(householdId, id);
-        event.getRecipes().removeIf(r -> r.getRecipeId().equals(recipeId));
+        ObjectId objectId = parseId(recipeId, "Receita nao encontrada: ");
+        event.getRecipes().removeIf(recipe -> recipe.getRecipeId().equals(objectId));
         return toResponse(repository.save(event));
     }
 
     private Event findOwned(Integer householdId, String id) {
-        Event event = repository.findById(id)
+        ObjectId objectId = parseId(id, "Evento nao encontrado: ");
+        Event event = repository.findById(objectId)
                 .orElseThrow(() -> new NotFoundException("Evento nao encontrado: " + id));
         if (!event.getHouseholdId().equals(householdId)) {
             throw new ForbiddenException("Evento nao pertence ao household autenticado");
@@ -72,10 +83,17 @@ public class EventService {
         return event;
     }
 
+    private ObjectId parseId(String id, String message) {
+        if (!ObjectId.isValid(id)) {
+            throw new NotFoundException(message + id);
+        }
+        return new ObjectId(id);
+    }
+
     private EventResponse toResponse(Event event) {
         return new EventResponse(
-                event.getId(), event.getHouseholdId(), event.getTitle(), event.getDescription(),
+                event.getId().toHexString(), event.getHouseholdId(), event.getTitle(), event.getDescription(),
                 event.getDate(), event.getDuration(), event.getLocation(), event.getPeopleCount(),
-                event.getRecipes().stream().map(EventRecipe::getRecipeId).toList());
+                event.getRecipes().stream().map(recipe -> recipe.getRecipeId().toHexString()).toList());
     }
 }

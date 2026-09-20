@@ -1,17 +1,18 @@
 package com.example.nexuscore.model;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
-@Document(collection = "event")
+@Document(collection = "events")
 public class Event {
 
     @Id
-    private String id;
+    private ObjectId id;
 
     @Field("household_id")
     private Integer householdId;
@@ -24,14 +25,16 @@ public class Event {
 
     private Integer duration;
 
+    @Field("local")
     private String location;
 
-    @Field("people_count")
+    @Field("qtd_people")
     private Integer peopleCount;
 
     private List<EventRecipe> recipes = new ArrayList<>();
 
-    protected Event() {}
+    protected Event() {
+    }
 
     public Event(Integer householdId, String title, String description, LocalDateTime date,
                  Integer duration, String location, Integer peopleCount) {
@@ -44,20 +47,63 @@ public class Event {
         this.peopleCount = peopleCount;
     }
 
-    public String getId() { return id; }
-    public Integer getHouseholdId() { return householdId; }
-    public String getTitle() { return title; }
-    public String getDescription() { return description; }
-    public LocalDateTime getDate() { return date; }
-    public Integer getDuration() { return duration; }
-    public String getLocation() { return location; }
-    public Integer getPeopleCount() { return peopleCount; }
-    public List<EventRecipe> getRecipes() { return recipes; }
+    public ObjectId getId() {
+        return id;
+    }
 
-    public void setTitle(String title) { this.title = title; }
-    public void setDescription(String description) { this.description = description; }
-    public void setDate(LocalDateTime date) { this.date = date; }
-    public void setDuration(Integer duration) { this.duration = duration; }
-    public void setLocation(String location) { this.location = location; }
-    public void setPeopleCount(Integer peopleCount) { this.peopleCount = peopleCount; }
+    public Integer getHouseholdId() {
+        return householdId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    public Integer getDuration() {
+        return duration;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public Integer getPeopleCount() {
+        return peopleCount;
+    }
+
+    public List<EventRecipe> getRecipes() {
+        return recipes;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setDate(LocalDateTime date) {
+        this.date = date;
+    }
+
+    public void setDuration(Integer duration) {
+        this.duration = duration;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public void setPeopleCount(Integer peopleCount) {
+        this.peopleCount = peopleCount;
+    }
 }
