@@ -1,14 +1,18 @@
 package com.example.nexuscore.repository;
 
 import com.example.nexuscore.model.Store;
-import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.util.List;
 
 public interface StoreRepository extends JpaRepository<Store, Integer> {
 
-        @Query(value = """
+    boolean existsByCnpj(String cnpj);
+
+    boolean existsByProfileId(Integer profileId);
+
+    @Query(value = """
             select * from (
                 select
                     s.id as id,
@@ -33,5 +37,7 @@ public interface StoreRepository extends JpaRepository<Store, Integer> {
             where distanceKm <= :radiusKm
             order by distanceKm asc
             """, nativeQuery = true)
-    List<StoreDistanceProjection> findNearby(@Param("lat") double lat, @Param("lng") double lng, @Param("radiusKm") double radiusKm);
+    List<StoreDistanceProjection> findNearby(@Param("lat") double lat,
+                                              @Param("lng") double lng,
+                                              @Param("radiusKm") double radiusKm);
 }

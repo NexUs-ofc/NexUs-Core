@@ -33,7 +33,8 @@ public class Store {
     @JoinColumn(name = "profile_id", nullable = false, unique = true)
     private Profile profile;
 
-    protected Store() {}
+    protected Store() {
+    }
 
     public Store(String cnpj, Company company, Profile profile) {
         this.cnpj = cnpj;
@@ -41,8 +42,23 @@ public class Store {
         this.profile = profile;
     }
 
-    public Integer getId() { return id; }
-    public String getCnpj() { return cnpj; }
-    public Company getCompany() { return company; }
-    public Profile getProfile() { return profile; }
+    public Integer getId() {
+        return id;
+    }
+
+    public String getCnpj() {
+        return cnpj;
+    }
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public Profile getProfile() {
+        return profile;
+    }
+
+    public void setCnpj(String cnpj) {
+        this.cnpj = cnpj;
+    }
 }

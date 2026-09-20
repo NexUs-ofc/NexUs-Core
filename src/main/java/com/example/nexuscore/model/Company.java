@@ -33,10 +33,26 @@ public class Company {
     @JoinColumn(name = "profile_id", nullable = false, unique = true)
     private Profile profile;
 
-    protected Company() {}
+    protected Company() {
+    }
 
-    public Integer getId() { return id; }
-    public Plan getPlan() { return plan; }
-    public String getCnpj() { return cnpj; }
-    public Profile getProfile() { return profile; }
+    public Integer getId() {
+        return id;
+    }
+
+    public Plan getPlan() {
+        return plan;
+    }
+
+    public String getCnpj() {
+        return cnpj;
+    }
+
+    public Profile getProfile() {
+        return profile;
+    }
+
+    public void setPlan(Plan plan) {
+        this.plan = plan;
+    }
 }

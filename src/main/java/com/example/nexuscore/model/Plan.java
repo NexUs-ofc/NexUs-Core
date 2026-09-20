@@ -25,10 +25,22 @@ public class Plan {
     @Column(name = "store_limit", nullable = false)
     private Integer storeLimit;
 
-    protected Plan() {}
+    protected Plan() {
+    }
 
-    public Integer getId() { return id; }
-    public BigDecimal getPlanPrice() { return planPrice; }
-    public String getPlanName() { return planName; }
-    public Integer getStoreLimit() { return storeLimit; }
+    public Integer getId() {
+        return id;
+    }
+
+    public BigDecimal getPlanPrice() {
+        return planPrice;
+    }
+
+    public String getPlanName() {
+        return planName;
+    }
+
+    public Integer getStoreLimit() {
+        return storeLimit;
+    }
 }

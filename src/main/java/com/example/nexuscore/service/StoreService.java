@@ -9,16 +9,17 @@ import com.example.nexuscore.geo.GeocodingService;
 import com.example.nexuscore.model.Address;
 import com.example.nexuscore.model.Company;
 import com.example.nexuscore.model.Profile;
+import com.example.nexuscore.model.ProfileType;
 import com.example.nexuscore.model.Store;
 import com.example.nexuscore.repository.AddressRepository;
 import com.example.nexuscore.repository.CompanyRepository;
 import com.example.nexuscore.repository.ProfileRepository;
 import com.example.nexuscore.repository.StoreDistanceProjection;
 import com.example.nexuscore.repository.StoreRepository;
-import java.util.List;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -59,6 +60,9 @@ public class StoreService {
                 () -> new NotFoundException("Nao foi possivel geocodificar o endereco informado"));
 
         double radius = radiusKm != null ? radiusKm : 10.0;
+        if (radius <= 0 || radius > 100) {
+            throw new IllegalArgumentException("Raio deve ser maior que zero e menor ou igual a 100 km");
+        }
         return repository.findNearby(geoPoint.latitude().doubleValue(), geoPoint.longitude().doubleValue(), radius)
                 .stream().map(this::toResponse).toList();
     }
@@ -80,8 +84,20 @@ public class StoreService {
                 .orElseThrow(() -> new ForbiddenException("Perfil autenticado nao possui uma empresa associada"));
         Profile storeProfile = profileRepository.findById(request.profileId())
                 .orElseThrow(() -> new NotFoundException("Perfil da loja nao encontrado: " + request.profileId()));
+        if (storeProfile.getType() != ProfileType.STORE) {
+            throw new IllegalArgumentException("Perfil informado deve ser do tipo STORE");
+        }
+        if (repository.existsByProfileId(storeProfile.getId())) {
+            throw new IllegalArgumentException("Perfil ja esta associado a uma loja");
+        }
+        if (repository.existsByCnpj(request.cnpj())) {
+            throw new IllegalArgumentException("CNPJ ja cadastrado");
+        }
 
         Address address = storeProfile.getAddress();
+        if (address == null) {
+            throw new IllegalArgumentException("Perfil da loja precisa possuir endereco");
+        }
         geocodingService.geocode(address).ifPresent(point -> {
             address.setLatitude(point.latitude());
             address.setLongitude(point.longitude());
