@@ -47,6 +47,11 @@ public class Address {
     protected Address() {
     }
 
+    public Address(String neighborhood, String street, String number, String cep,
+                   String city, String state, BigDecimal latitude, BigDecimal longitude) {
+        update(neighborhood, street, number, cep, city, state, latitude, longitude);
+    }
+
     public Integer getId() {
         return id;
     }
@@ -88,6 +93,18 @@ public class Address {
     }
 
     public void setLongitude(BigDecimal longitude) {
+        this.longitude = longitude;
+    }
+
+    public void update(String neighborhood, String street, String number, String cep,
+                       String city, String state, BigDecimal latitude, BigDecimal longitude) {
+        this.neighborhood = neighborhood;
+        this.street = street;
+        this.number = number;
+        this.cep = cep;
+        this.city = city;
+        this.state = state.toUpperCase();
+        this.latitude = latitude;
         this.longitude = longitude;
     }
 }
