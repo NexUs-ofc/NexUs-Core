@@ -1,12 +1,12 @@
 package com.example.nexuscore.dto.notification;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record NotificationResponse(
-        Integer id,
+        String id,
         String title,
         String message,
         String type,
-        LocalDateTime createdAt,
-        LocalDateTime readAt
+        Instant createdAt,
+        Instant readAt
 ) {}

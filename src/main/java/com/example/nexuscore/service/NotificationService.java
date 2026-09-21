@@ -4,12 +4,12 @@ import com.example.nexuscore.dto.notification.NotificationResponse;
 import com.example.nexuscore.exception.NotFoundException;
 import com.example.nexuscore.model.Notification;
 import com.example.nexuscore.repository.NotificationRepository;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import java.time.Instant;
 import java.util.List;
 
 @Service
-@Transactional(readOnly = true)
 public class NotificationService {
 
     private final NotificationRepository repository;
@@ -22,15 +22,33 @@ public class NotificationService {
         return repository.findByProfileIdOrderByCreatedAtDesc(profileId).stream().map(this::toResponse).toList();
     }
 
-    public NotificationResponse get(Integer profileId, Integer id) {
-        Notification notification = repository.findByIdAndProfileId(id, profileId)
-                .orElseThrow(() -> new NotFoundException("Notificacao nao encontrada: " + id));
+    public NotificationResponse get(Integer profileId, String id) {
+        Notification notification = findOwnedNotification(profileId, id);
         return toResponse(notification);
+    }
+
+    public NotificationResponse markAsRead(Integer profileId, String id) {
+        Notification notification = findOwnedNotification(profileId, id);
+        notification.markAsRead(Instant.now());
+        return toResponse(repository.save(notification));
+    }
+
+    public void markAllAsRead(Integer profileId) {
+        repository.markAllAsRead(profileId, Instant.now());
+    }
+
+    private Notification findOwnedNotification(Integer profileId, String id) {
+        if (!ObjectId.isValid(id)) {
+            throw new NotFoundException("Notificacao nao encontrada: " + id);
+        }
+        ObjectId objectId = new ObjectId(id);
+        return repository.findByIdAndProfileId(objectId, profileId)
+                .orElseThrow(() -> new NotFoundException("Notificacao nao encontrada: " + id));
     }
 
     private NotificationResponse toResponse(Notification notification) {
         return new NotificationResponse(
-                notification.getId(), notification.getTitle(), notification.getMessage(),
+                notification.getId().toHexString(), notification.getTitle(), notification.getMessage(),
                 notification.getType(), notification.getCreatedAt(), notification.getReadAt());
     }
 }
