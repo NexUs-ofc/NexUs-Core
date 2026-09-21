@@ -41,25 +41,47 @@ public class Food {
     @Column(name = "unit_of_measure", nullable = false, columnDefinition = "unit_of_measure_enum")
     private UnitOfMeasure unitOfMeasure;
 
+    @Column(length = 14, unique = true)
+    private String gtin;
+
     protected Food() {
+    }
+
+    public Food(String name, Category category, String productBrand, BigDecimal packageQuantity,
+                UnitOfMeasure unitOfMeasure, String gtin) {
+        this.name = name;
+        this.category = category;
+        this.productBrand = productBrand;
+        this.packageQuantity = packageQuantity;
+        this.unitOfMeasure = unitOfMeasure;
+        this.gtin = gtin;
     }
 
     public Integer getId() {
         return id;
     }
+
     public String getName() {
         return name;
     }
+
     public Category getCategory() {
         return category;
     }
+
     public String getProductBrand() {
         return productBrand;
     }
+
     public BigDecimal getPackageQuantity() {
         return packageQuantity;
     }
+
     public UnitOfMeasure getUnitOfMeasure() {
         return unitOfMeasure;
+    }
+
+    public String getGtin() {
+        return gtin;
     }
 }
