@@ -1,0 +1,58 @@
+package com.example.nexuscore.geo;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+import java.math.BigDecimal;
+import java.net.http.HttpClient;
+import java.time.Duration;
+import java.util.Optional;
+
+@Service
+public class NominatimGeocodingService implements GeocodingService {
+
+    private static final String BASE_URL = "https://nominatim.openstreetmap.org";
+
+    private final RestClient restClient;
+
+    public NominatimGeocodingService(GeocodingProperties properties) {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(3))
+                .build();
+        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
+        requestFactory.setReadTimeout(Duration.ofSeconds(5));
+        this.restClient = RestClient.builder()
+                .baseUrl(BASE_URL)
+                .requestFactory(requestFactory)
+                .defaultHeader("User-Agent", properties.userAgent())
+                .build();
+    }
+
+    @Override
+    public Optional<GeoPoint> geocode(String street, String number, String neighborhood, String city, String state) {
+        String query = "%s %s, %s, %s - %s, Brasil".formatted(street, number, neighborhood, city, state);
+        try {
+            NominatimResult[] results = restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/search")
+                            .queryParam("format", "json")
+                            .queryParam("limit", 1)
+                            .queryParam("q", query)
+                            .build())
+                    .retrieve()
+                    .body(NominatimResult[].class);
+            if (results == null || results.length == 0) {
+                return Optional.empty();
+            }
+            NominatimResult result = results[0];
+            return Optional.of(new GeoPoint(new BigDecimal(result.lat()), new BigDecimal(result.lon())));
+        } catch (RestClientException | NumberFormatException exception) {
+            return Optional.empty();
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record NominatimResult(String lat, String lon) {}
+}

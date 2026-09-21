@@ -50,28 +50,44 @@ public class Address {
     public Integer getId() {
         return id;
     }
+
     public String getNeighborhood() {
         return neighborhood;
     }
+
     public String getStreet() {
         return street;
     }
+
     public String getNumber() {
         return number;
     }
+
     public String getCep() {
         return cep;
     }
+
     public String getCity() {
         return city;
     }
+
     public String getState() {
         return state;
     }
+
     public BigDecimal getLatitude() {
         return latitude;
     }
+
     public BigDecimal getLongitude() {
         return longitude;
+    }
+
+    public void setLatitude(BigDecimal latitude) {
+        this.latitude = latitude;
+    }
+
+    public void setLongitude(BigDecimal longitude) {
+        this.longitude = longitude;
     }
 }
