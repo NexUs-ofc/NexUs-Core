@@ -1,5 +1,7 @@
 package com.example.nexuscore.service;
 
+import com.example.nexuscore.categorization.GpcCategoryResolver;
+import com.example.nexuscore.dto.stock.FoodRegistrationRequest;
 import com.example.nexuscore.dto.stock.FoodResponse;
 import com.example.nexuscore.dto.stock.MinimumQuantityRequest;
 import com.example.nexuscore.dto.stock.PantryProductSettingResponse;
@@ -32,17 +34,20 @@ public class StockService {
     private final FoodRepository foodRepository;
     private final CategoryRepository categoryRepository;
     private final ProfileRepository profileRepository;
+    private final GpcCategoryResolver gpcCategoryResolver;
 
     public StockService(PantryItemRepository pantryItemRepository,
                          PantryProductSettingRepository settingRepository,
                          FoodRepository foodRepository,
                          CategoryRepository categoryRepository,
-                         ProfileRepository profileRepository) {
+                         ProfileRepository profileRepository,
+                         GpcCategoryResolver gpcCategoryResolver) {
         this.pantryItemRepository = pantryItemRepository;
         this.settingRepository = settingRepository;
         this.foodRepository = foodRepository;
         this.categoryRepository = categoryRepository;
         this.profileRepository = profileRepository;
+        this.gpcCategoryResolver = gpcCategoryResolver;
     }
 
     public List<StockItemResponse> list(Integer profileId) {
@@ -90,6 +95,25 @@ public class StockService {
                 .orElseThrow(() -> new NotFoundException("Alimento nao encontrado: " + request.foodId()));
         PantryItem item = new PantryItem(food, profile, request.quantity(), request.expiryDate());
         return toResponse(pantryItemRepository.save(item));
+    }
+
+    @Transactional
+    public StockItemResponse registerFood(Integer profileId, FoodRegistrationRequest request) {
+        Food food = foodRepository.findByGtin(request.gtin())
+                .orElseGet(() -> createFoodFromRegistration(request));
+        Profile profile = profileRepository.getReferenceById(profileId);
+        PantryItem item = new PantryItem(food, profile, request.quantity(), request.expiryDate());
+        return toResponse(pantryItemRepository.save(item));
+    }
+
+    private Food createFoodFromRegistration(FoodRegistrationRequest request) {
+        String categoryName = gpcCategoryResolver.resolve(request.gpcCode());
+        Category category = categoryRepository.findByCategoryName(categoryName)
+                .orElseGet(() -> categoryRepository.save(new Category(categoryName)));
+
+        Food food = new Food(request.name(), category, request.productBrand(),
+                request.packageQuantity(), request.unitOfMeasure(), request.gtin());
+        return foodRepository.save(food);
     }
 
     @Transactional

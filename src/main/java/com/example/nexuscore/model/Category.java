@@ -21,9 +21,14 @@ public class Category {
     protected Category() {
     }
 
+    public Category(String categoryName) {
+        this.categoryName = categoryName;
+    }
+
     public Integer getId() {
         return id;
     }
+
     public String getCategoryName() {
         return categoryName;
     }
