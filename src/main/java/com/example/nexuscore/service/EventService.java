@@ -4,6 +4,7 @@ import com.example.nexuscore.dto.event.EventRequest;
 import com.example.nexuscore.dto.event.EventResponse;
 import com.example.nexuscore.exception.ForbiddenException;
 import com.example.nexuscore.exception.NotFoundException;
+import com.example.nexuscore.mapper.EventMapper;
 import com.example.nexuscore.model.Event;
 import com.example.nexuscore.model.EventRecipe;
 import com.example.nexuscore.model.Recipe;
@@ -23,19 +24,18 @@ public class EventService {
         this.repository = repository;
         this.recipeRepository = recipeRepository;
     }
-
     public List<EventResponse> list(Integer householdId) {
-        return repository.findByHouseholdId(householdId).stream().map(this::toResponse).toList();
+        return repository.findByHouseholdId(householdId).stream().map(EventMapper::toResponse).toList();
     }
 
     public EventResponse get(Integer householdId, String id) {
-        return toResponse(findOwned(householdId, id));
+        return EventMapper.toResponse(findOwned(householdId, id));
     }
 
     public EventResponse create(Integer householdId, EventRequest request) {
         Event event = new Event(householdId, request.title(), request.description(), request.date(),
                 request.duration(), request.location(), request.peopleCount());
-        return toResponse(repository.save(event));
+        return EventMapper.toResponse(repository.save(event));
     }
 
     public EventResponse update(Integer householdId, String id, EventRequest request) {
@@ -46,7 +46,7 @@ public class EventService {
         event.setDuration(request.duration());
         event.setLocation(request.location());
         event.setPeopleCount(request.peopleCount());
-        return toResponse(repository.save(event));
+        return EventMapper.toResponse(repository.save(event));
     }
 
     public void remove(Integer householdId, String id) {
@@ -63,14 +63,14 @@ public class EventService {
         if (!alreadyLinked) {
             event.getRecipes().add(new EventRecipe(objectId, recipe.getTitle()));
         }
-        return toResponse(repository.save(event));
+        return EventMapper.toResponse(repository.save(event));
     }
 
     public EventResponse unlinkRecipe(Integer householdId, String id, String recipeId) {
         Event event = findOwned(householdId, id);
         ObjectId objectId = parseId(recipeId, "Receita nao encontrada: ");
         event.getRecipes().removeIf(recipe -> recipe.getRecipeId().equals(objectId));
-        return toResponse(repository.save(event));
+        return EventMapper.toResponse(repository.save(event));
     }
 
     private Event findOwned(Integer householdId, String id) {
@@ -90,10 +90,4 @@ public class EventService {
         return new ObjectId(id);
     }
 
-    private EventResponse toResponse(Event event) {
-        return new EventResponse(
-                event.getId().toHexString(), event.getHouseholdId(), event.getTitle(), event.getDescription(),
-                event.getDate(), event.getDuration(), event.getLocation(), event.getPeopleCount(),
-                event.getRecipes().stream().map(recipe -> recipe.getRecipeId().toHexString()).toList());
-    }
 }

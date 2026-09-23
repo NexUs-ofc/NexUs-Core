@@ -2,6 +2,7 @@ package com.example.nexuscore.service;
 
 import com.example.nexuscore.dto.payment.PaymentResponse;
 import com.example.nexuscore.exception.NotFoundException;
+import com.example.nexuscore.mapper.PaymentMapper;
 import com.example.nexuscore.model.Company;
 import com.example.nexuscore.model.Payment;
 import com.example.nexuscore.model.PaymentStatus;
@@ -28,11 +29,11 @@ public class PaymentService {
         List<Payment> payments = status == null
                 ? repository.findByCompanyIdOrderByDueDateDesc(companyId)
                 : repository.findByCompanyIdAndPaymentStatusOrderByDueDateDesc(companyId, status);
-        return payments.stream().map(this::toResponse).toList();
+        return payments.stream().map(PaymentMapper::toResponse).toList();
     }
 
     public PaymentResponse get(Integer profileId, Integer id) {
-        return toResponse(findOwned(profileId, id));
+        return PaymentMapper.toResponse(findOwned(profileId, id));
     }
 
     @Transactional
@@ -45,7 +46,7 @@ public class PaymentService {
             throw new IllegalArgumentException("Pagamento foi cancelado");
         }
         payment.pay(LocalDateTime.now());
-        return toResponse(repository.save(payment));
+        return PaymentMapper.toResponse(repository.save(payment));
     }
 
     private Payment findOwned(Integer profileId, Integer id) {
@@ -54,11 +55,4 @@ public class PaymentService {
                 .orElseThrow(() -> new NotFoundException("Pagamento nao encontrado: " + id));
     }
 
-    private PaymentResponse toResponse(Payment payment) {
-        return new PaymentResponse(
-                payment.getId(), payment.getDueDate(), payment.getBillingPeriodStart(),
-                payment.getBillingPeriodEnd(), payment.getPaymentStatus(),
-                payment.getCompany().getId(), payment.getPlan().getId(), payment.getAmount(),
-                payment.getCreatedAt(), payment.getUpdatedAt(), payment.getPaidAt());
-    }
 }

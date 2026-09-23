@@ -4,6 +4,7 @@ import com.example.nexuscore.dto.company.CompanyResponse;
 import com.example.nexuscore.dto.company.PlanChangeRequest;
 import com.example.nexuscore.exception.ForbiddenException;
 import com.example.nexuscore.exception.NotFoundException;
+import com.example.nexuscore.mapper.CompanyMapper;
 import com.example.nexuscore.model.Company;
 import com.example.nexuscore.model.Plan;
 import com.example.nexuscore.model.Profile;
@@ -43,7 +44,7 @@ public class CompanyService {
                     "Plano nao comporta as " + storeCount + " lojas da empresa");
         }
         company.setPlan(plan);
-        return toResponse(companies.save(company));
+        return CompanyMapper.toResponse(companies.save(company), storeCount);
     }
 
     public Company companyOf(Integer profileId) {
@@ -54,12 +55,5 @@ public class CompanyService {
         }
         return companies.findByProfileId(profileId)
                 .orElseThrow(() -> new NotFoundException("Empresa nao encontrada para o perfil autenticado"));
-    }
-
-    private CompanyResponse toResponse(Company company) {
-        Plan plan = company.getPlan();
-        return new CompanyResponse(
-                company.getId(), company.getCnpj(), plan.getId(), plan.getPlanName(),
-                plan.getPlanPrice(), plan.getStoreLimit(), stores.countByCompanyId(company.getId()));
     }
 }

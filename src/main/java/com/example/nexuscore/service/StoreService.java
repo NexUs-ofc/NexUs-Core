@@ -7,6 +7,7 @@ import com.example.nexuscore.dto.store.StoreUpdateRequest;
 import com.example.nexuscore.exception.NotFoundException;
 import com.example.nexuscore.geo.GeoPoint;
 import com.example.nexuscore.geo.GeocodingService;
+import com.example.nexuscore.mapper.StoreMapper;
 import com.example.nexuscore.model.Address;
 import com.example.nexuscore.model.Company;
 import com.example.nexuscore.model.Profile;
@@ -14,7 +15,6 @@ import com.example.nexuscore.model.ProfileType;
 import com.example.nexuscore.model.Store;
 import com.example.nexuscore.repository.AddressRepository;
 import com.example.nexuscore.repository.ProfileRepository;
-import com.example.nexuscore.repository.StoreDistanceProjection;
 import com.example.nexuscore.repository.StoreRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,8 +42,13 @@ public class StoreService {
         this.geocodingService = geocodingService;
     }
 
+    public StoreResponse get(Integer id) {
+        return StoreMapper.toResponse(repository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Loja nao encontrada: " + id)));
+    }
+
     public List<StoreResponse> list() {
-        return repository.findAll().stream().map(this::toResponse).toList();
+        return repository.findAll().stream().map(StoreMapper::toResponse).toList();
     }
 
     public List<StoreResponse> nearby(Integer profileId, String street, String number, String neighborhood,
@@ -59,22 +64,17 @@ public class StoreService {
             throw new IllegalArgumentException("Raio deve ser maior que zero e menor ou igual a 100 km");
         }
         return repository.findNearby(geoPoint.latitude().doubleValue(), geoPoint.longitude().doubleValue(), radius)
-                .stream().map(this::toResponse).toList();
+                .stream().map(StoreMapper::toResponse).toList();
     }
 
-    public StoreResponse get(Integer id) {
-        Store store = repository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Loja nao encontrada: " + id));
-        return toResponse(store);
-    }
 
     public List<StoreResponse> listCompany(Integer profileId) {
         Company company = companyService.companyOf(profileId);
-        return repository.findByCompanyId(company.getId()).stream().map(this::toResponse).toList();
+        return repository.findByCompanyId(company.getId()).stream().map(StoreMapper::toResponse).toList();
     }
 
     public StoreResponse getCompany(Integer profileId, Integer id) {
-        return toResponse(findOwned(profileId, id));
+        return StoreMapper.toResponse(findOwned(profileId, id));
     }
 
     @Transactional
@@ -98,7 +98,7 @@ public class StoreService {
                 request.phones() == null ? new LinkedHashSet<>() : new LinkedHashSet<>(request.phones())));
 
         Store store = new Store(request.cnpj(), company, storeProfile);
-        return toResponse(repository.save(store));
+        return StoreMapper.toResponse(repository.save(store));
     }
 
     @Transactional
@@ -121,7 +121,7 @@ public class StoreService {
         if (request.address() != null) {
             profile.setAddress(saveAddress(profile.getAddress(), request.address()));
         }
-        return toResponse(repository.save(store));
+        return StoreMapper.toResponse(repository.save(store));
     }
 
     @Transactional
@@ -169,27 +169,5 @@ public class StoreService {
             throw new IllegalArgumentException("Perfil autenticado nao possui endereco");
         }
         return address;
-    }
-
-    private StoreResponse toResponse(Store store) {
-        Address address = store.getProfile().getAddress();
-        return new StoreResponse(
-                store.getId(), store.getProfile().getName(), store.getCnpj(),
-                address == null ? null : address.getStreet(),
-                address == null ? null : address.getNumber(),
-                address == null ? null : address.getNeighborhood(),
-                address == null ? null : address.getCity(),
-                address == null ? null : address.getState(),
-                address == null ? null : address.getLatitude(),
-                address == null ? null : address.getLongitude(),
-                null);
-    }
-
-    private StoreResponse toResponse(StoreDistanceProjection projection) {
-        return new StoreResponse(
-                projection.getId(), projection.getName(), projection.getCnpj(),
-                projection.getStreet(), projection.getNumber(), projection.getNeighborhood(),
-                projection.getCity(), projection.getState(), projection.getLatitude(), projection.getLongitude(),
-                projection.getDistanceKm());
     }
 }
