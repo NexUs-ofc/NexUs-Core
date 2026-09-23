@@ -31,4 +31,4 @@ app:
     issuer: ${JWT_ISSUER:nexus-auth}
     jwt-secret-base64: ${JWT_SECRET_BASE64}
   geocoding:
-    user-agent: ${GEOCODING_USER_AGENT:NexUs-Core/1.0 (contato: suporte@nexus.app)}
+    user-agent: '${GEOCODING_USER_AGENT:NexUs-Core/1.0 (contato: suporte@nexus.app)}'
