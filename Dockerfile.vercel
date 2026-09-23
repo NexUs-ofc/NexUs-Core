@@ -24,4 +24,4 @@ EXPOSE 8080
 
 USER nexus
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-XX:TieredStopAtLevel=1", "-XX:+UseSerialGC", "-Xshare:auto", "-jar", "/app/app.jar"]
