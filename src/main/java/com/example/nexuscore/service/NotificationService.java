@@ -2,6 +2,7 @@ package com.example.nexuscore.service;
 
 import com.example.nexuscore.dto.notification.NotificationResponse;
 import com.example.nexuscore.exception.NotFoundException;
+import com.example.nexuscore.mapper.NotificationMapper;
 import com.example.nexuscore.model.Notification;
 import com.example.nexuscore.repository.NotificationRepository;
 import org.bson.types.ObjectId;
@@ -19,18 +20,20 @@ public class NotificationService {
     }
 
     public List<NotificationResponse> list(Integer profileId) {
-        return repository.findByProfileIdOrderByCreatedAtDesc(profileId).stream().map(this::toResponse).toList();
+        return repository.findByProfileIdOrderByCreatedAtDesc(profileId).stream()
+                .map(NotificationMapper::toResponse)
+                .toList();
     }
 
     public NotificationResponse get(Integer profileId, String id) {
         Notification notification = findOwnedNotification(profileId, id);
-        return toResponse(notification);
+        return NotificationMapper.toResponse(notification);
     }
 
     public NotificationResponse markAsRead(Integer profileId, String id) {
         Notification notification = findOwnedNotification(profileId, id);
         notification.markAsRead(Instant.now());
-        return toResponse(repository.save(notification));
+        return NotificationMapper.toResponse(repository.save(notification));
     }
 
     public void markAllAsRead(Integer profileId) {
@@ -46,9 +49,4 @@ public class NotificationService {
                 .orElseThrow(() -> new NotFoundException("Notificacao nao encontrada: " + id));
     }
 
-    private NotificationResponse toResponse(Notification notification) {
-        return new NotificationResponse(
-                notification.getId().toHexString(), notification.getTitle(), notification.getMessage(),
-                notification.getType(), notification.getCreatedAt(), notification.getReadAt());
-    }
 }

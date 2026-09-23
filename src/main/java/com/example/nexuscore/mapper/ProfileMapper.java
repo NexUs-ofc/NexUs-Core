@@ -5,7 +5,7 @@ import com.example.nexuscore.dto.profile.ProfileResponse;
 import com.example.nexuscore.model.Address;
 import com.example.nexuscore.model.Profile;
 
-public class ProfileMapper {
+public final class ProfileMapper {
 
     private ProfileMapper() {
     }
@@ -24,7 +24,7 @@ public class ProfileMapper {
                 toAddressResponse(address));
     }
 
-    public static AddressResponse toAddressResponse(Address address) {
+    private static AddressResponse toAddressResponse(Address address) {
         if (address == null) {
             return null;
         }

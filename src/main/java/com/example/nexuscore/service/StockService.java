@@ -10,6 +10,7 @@ import com.example.nexuscore.dto.stock.StockItemResponse;
 import com.example.nexuscore.dto.stock.StockItemUpdateRequest;
 import com.example.nexuscore.exception.ForbiddenException;
 import com.example.nexuscore.exception.NotFoundException;
+import com.example.nexuscore.mapper.StockMapper;
 import com.example.nexuscore.model.Category;
 import com.example.nexuscore.model.Food;
 import com.example.nexuscore.model.PantryItem;
@@ -52,13 +53,13 @@ public class StockService {
 
     public List<StockItemResponse> list(Integer profileId) {
         return pantryItemRepository.findByProfileIdOrderByExpiryDateAscIdDesc(profileId).stream()
-                .map(this::toResponse)
+                .map(StockMapper::toResponse)
                 .toList();
     }
 
     public List<StockItemResponse> expired(Integer profileId) {
         return pantryItemRepository.findByProfileIdAndExpiryDateBefore(profileId, LocalDate.now()).stream()
-                .map(this::toResponse)
+                .map(StockMapper::toResponse)
                 .toList();
     }
 
@@ -69,8 +70,7 @@ public class StockService {
                             .sumQuantityByProfileIdAndFoodId(profileId, setting.getFood().getId());
                     return current < setting.getMinimumQuantity();
                 })
-                .map(setting -> new PantryProductSettingResponse(
-                        setting.getFood().getId(), setting.getFood().getName(), setting.getMinimumQuantity()))
+                .map(StockMapper::toResponse)
                 .toList();
     }
 
@@ -78,13 +78,12 @@ public class StockService {
         List<Food> foods = search == null || search.isBlank()
                 ? foodRepository.findAll()
                 : foodRepository.findByNameContainingIgnoreCase(search);
-        return foods.stream().map(this::toResponse).toList();
+        return foods.stream().map(StockMapper::toResponse).toList();
     }
 
     public List<PantryProductSettingResponse> listSettings(Integer profileId) {
         return settingRepository.findByProfileId(profileId).stream()
-                .map(setting -> new PantryProductSettingResponse(
-                        setting.getFood().getId(), setting.getFood().getName(), setting.getMinimumQuantity()))
+                .map(StockMapper::toResponse)
                 .toList();
     }
 
@@ -94,7 +93,7 @@ public class StockService {
         Food food = foodRepository.findById(request.foodId())
                 .orElseThrow(() -> new NotFoundException("Alimento nao encontrado: " + request.foodId()));
         PantryItem item = new PantryItem(food, profile, request.quantity(), request.expiryDate());
-        return toResponse(pantryItemRepository.save(item));
+        return StockMapper.toResponse(pantryItemRepository.save(item));
     }
 
     @Transactional
@@ -103,7 +102,7 @@ public class StockService {
                 .orElseGet(() -> createFoodFromRegistration(request));
         Profile profile = profileRepository.getReferenceById(profileId);
         PantryItem item = new PantryItem(food, profile, request.quantity(), request.expiryDate());
-        return toResponse(pantryItemRepository.save(item));
+        return StockMapper.toResponse(pantryItemRepository.save(item));
     }
 
     private Food createFoodFromRegistration(FoodRegistrationRequest request) {
@@ -125,7 +124,7 @@ public class StockService {
         if (request.expiryDate() != null) {
             item.setExpiryDate(request.expiryDate());
         }
-        return toResponse(item);
+        return StockMapper.toResponse(pantryItemRepository.save(item));
     }
 
     @Transactional
@@ -144,8 +143,7 @@ public class StockService {
                         profileRepository.getReferenceById(profileId), request.minimumQuantity()));
         setting.setMinimumQuantity(request.minimumQuantity());
         PantryProductSetting saved = settingRepository.save(setting);
-        return new PantryProductSettingResponse(saved.getFood().getId(),
-                saved.getFood().getName(), saved.getMinimumQuantity());
+        return StockMapper.toResponse(saved);
     }
 
     private PantryItem findOwnedItem(Integer profileId, Integer itemId) {
@@ -157,25 +155,4 @@ public class StockService {
         return item;
     }
 
-    private StockItemResponse toResponse(PantryItem item) {
-        return new StockItemResponse(
-                item.getId(),
-                item.getFood().getId(),
-                item.getFood().getName(),
-                item.getFood().getProductBrand(),
-                item.getFood().getUnitOfMeasure().name(),
-                item.getQuantity(),
-                item.getExpiryDate());
-    }
-
-    private FoodResponse toResponse(Food food) {
-        Category category = food.getCategory();
-        return new FoodResponse(
-                food.getId(),
-                food.getName(),
-                category != null ? category.getCategoryName() : null,
-                food.getProductBrand(),
-                food.getPackageQuantity(),
-                food.getUnitOfMeasure().name());
-    }
 }

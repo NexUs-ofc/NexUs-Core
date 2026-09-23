@@ -1,8 +1,8 @@
 package com.example.nexuscore.service;
 
-import com.example.nexuscore.dto.recipe.RecipeIngredientResponse;
 import com.example.nexuscore.dto.recipe.RecipeResponse;
 import com.example.nexuscore.exception.NotFoundException;
+import com.example.nexuscore.mapper.RecipeMapper;
 import com.example.nexuscore.model.Recipe;
 import com.example.nexuscore.model.RecipeAccount;
 import com.example.nexuscore.repository.RecipeAccountRepository;
@@ -34,7 +34,7 @@ public class RecipeService {
         return links.stream()
                 .map(link -> recipesById.get(link.getRecipeId()))
                 .filter(recipe -> recipe != null)
-                .map(this::toResponse)
+                .map(RecipeMapper::toResponse)
                 .toList();
     }
 
@@ -45,7 +45,7 @@ public class RecipeService {
 
         recipeAccountRepository.findByRecipeIdAndAccountId(objectId, accountId)
                 .orElseGet(() -> recipeAccountRepository.save(new RecipeAccount(objectId, accountId)));
-        return toResponse(recipe);
+        return RecipeMapper.toResponse(recipe);
     }
 
     public void unfavorite(Integer accountId, String recipeId) {
@@ -59,21 +59,5 @@ public class RecipeService {
             throw new NotFoundException("Receita nao encontrada: " + recipeId);
         }
         return new ObjectId(recipeId);
-    }
-
-    private RecipeResponse toResponse(Recipe recipe) {
-        return new RecipeResponse(
-                recipe.getId().toHexString(),
-                recipe.getTitle(),
-                recipe.getServingSize(),
-                recipe.getIngredients().stream()
-                        .map(ingredient -> new RecipeIngredientResponse(
-                                ingredient.getFoodId(),
-                                ingredient.getRequiredQuantity(),
-                                ingredient.getMandatory(),
-                                ingredient.getPossibleSubstitutes()))
-                        .toList(),
-                recipe.getInstructions(),
-                recipe.getCreatedBy());
     }
 }
