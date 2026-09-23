@@ -2,7 +2,7 @@ services:
   nexus-core:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.vercel.vercel
     image: nexus-core:local
     ports:
       - "${PORT:-8080}:${PORT:-8080}"
