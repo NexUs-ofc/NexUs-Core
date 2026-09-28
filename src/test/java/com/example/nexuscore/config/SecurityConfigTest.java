@@ -48,26 +48,48 @@ class SecurityConfigTest {
     }
 
     @Test
-    void allowsCorsForEveryOriginMethodAndHeader() {
+    void allowsCorsCredentialsForConfiguredOrigins() {
         CorsConfigurationSource source = new SecurityConfig().corsConfigurationSource();
         HttpServletRequest request = new MockHttpServletRequest("OPTIONS", "/api/stores/nearby");
 
         CorsConfiguration configuration = source.getCorsConfiguration(request);
 
         assertThat(configuration).isNotNull();
-        assertThat(configuration.getAllowedOrigins()).isEqualTo(List.of("*"));
+        assertThat(configuration.getAllowedOrigins()).containsExactly(
+                "http://localhost:5173",
+                "https://ceris-core.vercel.app");
         assertThat(configuration.getAllowedMethods()).isEqualTo(List.of("*"));
         assertThat(configuration.getAllowedHeaders()).isEqualTo(List.of("*"));
         assertThat(configuration.getExposedHeaders()).isEqualTo(List.of("*"));
+        assertThat(configuration.getAllowCredentials()).isTrue();
     }
 
     @Test
-    void allowsCorsPreflightWithoutAuthentication() throws Exception {
+    void allowsLocalhostCorsPreflightWithCredentialsWithoutAuthentication() throws Exception {
         mockMvc.perform(options("/api/stores/nearby")
-                        .header("Origin", "https://client.example.com")
+                        .header("Origin", "http://localhost:5173")
                         .header("Access-Control-Request-Method", "GET")
                         .header("Access-Control-Request-Headers", "Authorization"))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Access-Control-Allow-Origin", "*"));
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"))
+                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
+    }
+
+    @Test
+    void allowsCoreVercelOriginToAccessSwaggerDocs() throws Exception {
+        mockMvc.perform(options("/v3/api-docs")
+                        .header("Origin", "https://ceris-core.vercel.app")
+                        .header("Access-Control-Request-Method", "GET"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "https://ceris-core.vercel.app"))
+                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
+    }
+
+    @Test
+    void rejectsCorsPreflightFromUnknownOrigin() throws Exception {
+        mockMvc.perform(options("/api/stores/nearby")
+                        .header("Origin", "https://unknown.example.com")
+                        .header("Access-Control-Request-Method", "GET"))
+                .andExpect(status().isForbidden());
     }
 }
