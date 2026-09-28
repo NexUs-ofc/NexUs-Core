@@ -14,10 +14,9 @@ spring:
     open-in-view: false
     properties:
       hibernate.boot.allow_jdbc_metadata_access: false
-  data:
-    mongodb:
-      uri: ${MONGODB_URI}
-      database: ${MONGODB_DATABASE}
+  mongodb:
+    uri: ${MONGODB_URI}
+    database: ${MONGODB_DATABASE}
   management:
     endpoints:
       web:

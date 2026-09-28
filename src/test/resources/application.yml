@@ -12,10 +12,9 @@ spring:
       ddl-auto: none
     properties:
       hibernate.boot.allow_jdbc_metadata_access: false
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/nexus_core_test
-      database: nexus_core_test
+  mongodb:
+    uri: mongodb://localhost:27017/nexus_core_test
+    database: nexus_core_test
 
 app:
   auth:
