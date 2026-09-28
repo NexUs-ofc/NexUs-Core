@@ -9,6 +9,7 @@ import com.example.nexuscore.geo.GeocodingService;
 import com.example.nexuscore.mapper.ProfileMapper;
 import com.example.nexuscore.model.Address;
 import com.example.nexuscore.model.Profile;
+import com.example.nexuscore.model.ProfileType;
 import com.example.nexuscore.repository.AddressRepository;
 import com.example.nexuscore.repository.ProfileRepository;
 import org.springframework.stereotype.Service;
@@ -49,7 +50,17 @@ public class ProfileService {
         if (request.address() != null) {
             profile.setAddress(saveAddress(profile.getAddress(), request.address()));
         }
+
+        validateRequiredAddress(profile);
+
         return ProfileMapper.toResponse(profile);
+    }
+
+    private void validateRequiredAddress(Profile profile) {
+        boolean addressRequired = profile.getType() == ProfileType.HOUSEHOLD || profile.getType() == ProfileType.STORE;
+        if (addressRequired && profile.getAddress() == null) {
+            throw new IllegalArgumentException("Endereco e obrigatorio para perfis do tipo HOUSEHOLD ou STORE");
+        }
     }
 
     private Address saveAddress(Address current, AddressRequest request) {
