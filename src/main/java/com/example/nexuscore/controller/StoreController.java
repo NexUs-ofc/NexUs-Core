@@ -28,15 +28,12 @@ public class StoreController {
     }
 
     @GetMapping("/nearby")
-    public List<StoreResponse> nearby(@RequestParam(required = false) String street,
-                                       @RequestParam(required = false) String number,
-                                       @RequestParam(required = false) String neighborhood,
-                                       @RequestParam(required = false) String city,
-                                       @RequestParam(required = false) String state,
+    public List<StoreResponse> nearby(@RequestParam(required = false) Double latitude,
+                                       @RequestParam(required = false) Double longitude,
                                        @RequestParam(required = false) Double radiusKm) {
         return service.nearby(
                 currentProfile.profileId().intValue(),
-                street, number, neighborhood, city, state, radiusKm);
+                latitude, longitude, radiusKm);
     }
 
     @GetMapping("/{id}")

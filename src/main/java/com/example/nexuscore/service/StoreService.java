@@ -18,9 +18,9 @@ import com.example.nexuscore.repository.ProfileRepository;
 import com.example.nexuscore.repository.StoreRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -51,19 +51,13 @@ public class StoreService {
         return repository.findAll().stream().map(StoreMapper::toResponse).toList();
     }
 
-    public List<StoreResponse> nearby(Integer profileId, String street, String number, String neighborhood,
-                                       String city, String state, Double radiusKm) {
-        Optional<GeoPoint> point = hasAddress(street)
-                ? geocodingService.geocode(street, number, neighborhood, city, state)
-                : geocodingService.geocode(resolveProfileAddress(profileId));
-        GeoPoint geoPoint = point.orElseThrow(
-                () -> new NotFoundException("Nao foi possivel geocodificar o endereco informado"));
-
+    public List<StoreResponse> nearby(Integer profileId, Double latitude, Double longitude, Double radiusKm) {
+        GeoPoint point = resolveNearbyPoint(profileId, latitude, longitude);
         double radius = radiusKm != null ? radiusKm : 10.0;
         if (radius <= 0 || radius > 100) {
             throw new IllegalArgumentException("Raio deve ser maior que zero e menor ou igual a 100 km");
         }
-        return repository.findNearby(geoPoint.latitude().doubleValue(), geoPoint.longitude().doubleValue(), radius)
+        return repository.findNearby(point.latitude().doubleValue(), point.longitude().doubleValue(), radius)
                 .stream().map(StoreMapper::toResponse).toList();
     }
 
@@ -157,8 +151,24 @@ public class StoreService {
         return addressRepository.save(address);
     }
 
-    private boolean hasAddress(String street) {
-        return street != null && !street.isBlank();
+    private GeoPoint resolveNearbyPoint(Integer profileId, Double latitude, Double longitude) {
+        if (latitude == null && longitude == null) {
+            Address address = resolveProfileAddress(profileId);
+            if (address.getLatitude() == null || address.getLongitude() == null) {
+                throw new IllegalArgumentException("Endereco do perfil nao possui latitude e longitude");
+            }
+            return new GeoPoint(address.getLatitude(), address.getLongitude());
+        }
+        if (latitude == null || longitude == null) {
+            throw new IllegalArgumentException("Latitude e longitude devem ser informadas juntas");
+        }
+        if (!Double.isFinite(latitude) || latitude < -90 || latitude > 90) {
+            throw new IllegalArgumentException("Latitude deve estar entre -90 e 90");
+        }
+        if (!Double.isFinite(longitude) || longitude < -180 || longitude > 180) {
+            throw new IllegalArgumentException("Longitude deve estar entre -180 e 180");
+        }
+        return new GeoPoint(BigDecimal.valueOf(latitude), BigDecimal.valueOf(longitude));
     }
 
     private Address resolveProfileAddress(Integer profileId) {
