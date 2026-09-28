@@ -5,6 +5,8 @@ spring:
     url: jdbc:postgresql://localhost:1/nexus_core_test
     username: test
     password: test
+    hikari:
+      maximum-pool-size: 5
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
