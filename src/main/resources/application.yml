@@ -24,6 +24,9 @@ spring:
       web:
         exposure:
           include: health
+    health:
+      mongo:
+        enabled: false
 
 server:
   port: ${PORT:8080}
