@@ -1,6 +1,8 @@
 package com.example.nexuscore.repository;
 
+import com.example.nexuscore.dto.store.StoreDistanceProjection;
 import com.example.nexuscore.model.Store;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -8,6 +10,14 @@ import java.util.List;
 import java.util.Optional;
 
 public interface StoreRepository extends JpaRepository<Store, Integer> {
+
+    @Override
+    @EntityGraph(attributePaths = {"profile", "profile.address"})
+    Optional<Store> findById(Integer id);
+
+    @Override
+    @EntityGraph(attributePaths = {"profile", "profile.address"})
+    List<Store> findAll();
 
     boolean existsByCnpj(String cnpj);
 
@@ -17,8 +27,10 @@ public interface StoreRepository extends JpaRepository<Store, Integer> {
 
     long countByCompanyId(Integer companyId);
 
+    @EntityGraph(attributePaths = {"profile", "profile.address"})
     List<Store> findByCompanyId(Integer companyId);
 
+    @EntityGraph(attributePaths = {"profile", "profile.address"})
     Optional<Store> findByIdAndCompanyId(Integer id, Integer companyId);
 
     @Query(value = """

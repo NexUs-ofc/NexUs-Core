@@ -9,6 +9,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
+import java.util.Objects;
 
 @Entity
 @Table(name = "address")
@@ -94,6 +95,15 @@ public class Address {
 
     public void setLongitude(BigDecimal longitude) {
         this.longitude = longitude;
+    }
+
+    public boolean hasSameLocation(String street, String number, String neighborhood,
+                                   String city, String state) {
+        return Objects.equals(this.street, street)
+                && Objects.equals(this.number, number)
+                && Objects.equals(this.neighborhood, neighborhood)
+                && Objects.equals(this.city, city)
+                && Objects.equals(this.state, state.toUpperCase());
     }
 
     public void update(String neighborhood, String street, String number, String cep,
