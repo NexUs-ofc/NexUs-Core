@@ -19,17 +19,22 @@ spring:
   mongodb:
     uri: ${MONGODB_URI}
     database: ${MONGODB_DATABASE}
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: health
+  web:
+    error:
+      include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  health:
+    mongodb:
+      enabled: false
 
 server:
   port: ${PORT:8080}
   forward-headers-strategy: framework
-  error:
-    include-message: never
 
 app:
   auth:
