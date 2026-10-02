@@ -64,12 +64,7 @@ public class StockService {
     }
 
     public List<PantryProductSettingResponse> missing(Integer profileId) {
-        return settingRepository.findByProfileId(profileId).stream()
-                .filter(setting -> {
-                    Integer current = pantryItemRepository
-                            .sumQuantityByProfileIdAndFoodId(profileId, setting.getFood().getId());
-                    return current < setting.getMinimumQuantity();
-                })
+        return settingRepository.findMissingByProfileId(profileId).stream()
                 .map(StockMapper::toResponse)
                 .toList();
     }

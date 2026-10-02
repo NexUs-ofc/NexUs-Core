@@ -12,6 +12,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -63,6 +65,7 @@ public class Profile {
 
     public Profile(Address address, String email, String name, String profileImageUrl,
                    ProfileType type, Set<String> phones) {
+        requireAddress(type, address);
         this.address = address;
         this.email = email;
         this.name = name;
@@ -124,6 +127,19 @@ public class Profile {
     }
 
     public void setAddress(Address address) {
+        requireAddress(type, address);
         this.address = address;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void validateAddress() {
+        requireAddress(type, address);
+    }
+
+    private static void requireAddress(ProfileType type, Address address) {
+        if ((type == ProfileType.HOUSEHOLD || type == ProfileType.STORE) && address == null) {
+            throw new IllegalArgumentException("Endereco e obrigatorio para perfis do tipo HOUSEHOLD ou STORE");
+        }
     }
 }

@@ -64,9 +64,14 @@ public class ProfileService {
     }
 
     private Address saveAddress(Address current, AddressRequest request) {
-        GeoPoint point = geocodingService.geocode(
-                        request.street(), request.number(), request.neighborhood(), request.city(), request.state())
-                .orElseThrow(() -> new IllegalArgumentException("Nao foi possivel geocodificar o endereco"));
+        GeoPoint point = current != null
+                && current.hasSameLocation(request.street(), request.number(), request.neighborhood(),
+                        request.city(), request.state())
+                && current.getLatitude() != null && current.getLongitude() != null
+                ? new GeoPoint(current.getLatitude(), current.getLongitude())
+                : geocodingService.geocode(request.street(), request.number(), request.neighborhood(),
+                        request.city(), request.state())
+                        .orElseThrow(() -> new IllegalArgumentException("Nao foi possivel geocodificar o endereco"));
         Address address = current != null ? current : new Address(
                 request.neighborhood(), request.street(), request.number(), request.cep(),
                 request.city(), request.state(), point.latitude(), point.longitude());
