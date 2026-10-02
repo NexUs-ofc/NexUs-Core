@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(properties = "CORS_ALLOWED_ORIGINS=https://frontend.example.com, http://localhost:3000")
 @AutoConfigureMockMvc
 @MockitoBean(types = NominatimGeocodingService.class)
 class SecurityConfigTest {
@@ -49,15 +49,16 @@ class SecurityConfigTest {
 
     @Test
     void allowsCorsCredentialsForConfiguredOrigins() {
-        CorsConfigurationSource source = new SecurityConfig().corsConfigurationSource();
+        CorsConfigurationSource source = new SecurityConfig().corsConfigurationSource(
+                " https://frontend.example.com, http://localhost:3000, , ");
         HttpServletRequest request = new MockHttpServletRequest("OPTIONS", "/api/stores/nearby");
 
         CorsConfiguration configuration = source.getCorsConfiguration(request);
 
         assertThat(configuration).isNotNull();
         assertThat(configuration.getAllowedOrigins()).containsExactly(
-                "http://localhost:5173",
-                "https://ceris-core.vercel.app");
+                "https://frontend.example.com",
+                "http://localhost:3000");
         assertThat(configuration.getAllowedMethods()).isEqualTo(List.of("*"));
         assertThat(configuration.getAllowedHeaders()).isEqualTo(List.of("*"));
         assertThat(configuration.getExposedHeaders()).isEqualTo(List.of("*"));
@@ -65,23 +66,23 @@ class SecurityConfigTest {
     }
 
     @Test
-    void allowsLocalhostCorsPreflightWithCredentialsWithoutAuthentication() throws Exception {
+    void allowsConfiguredLocalhostCorsPreflightWithCredentialsWithoutAuthentication() throws Exception {
         mockMvc.perform(options("/api/stores/nearby")
-                        .header("Origin", "http://localhost:5173")
+                        .header("Origin", "http://localhost:3000")
                         .header("Access-Control-Request-Method", "GET")
                         .header("Access-Control-Request-Headers", "Authorization"))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"))
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:3000"))
                 .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
     }
 
     @Test
-    void allowsCoreVercelOriginToAccessSwaggerDocs() throws Exception {
+    void allowsConfiguredOriginToAccessSwaggerDocs() throws Exception {
         mockMvc.perform(options("/v3/api-docs")
-                        .header("Origin", "https://ceris-core.vercel.app")
+                        .header("Origin", "https://frontend.example.com")
                         .header("Access-Control-Request-Method", "GET"))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Access-Control-Allow-Origin", "https://ceris-core.vercel.app"))
+                .andExpect(header().string("Access-Control-Allow-Origin", "https://frontend.example.com"))
                 .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
     }
 
@@ -91,5 +92,21 @@ class SecurityConfigTest {
                         .header("Origin", "https://unknown.example.com")
                         .header("Access-Control-Request-Method", "GET"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void rejectsPreviouslyHardcodedOriginWhenNotConfigured() throws Exception {
+        mockMvc.perform(options("/api/stores/nearby")
+                        .header("Origin", "https://ceris-core.vercel.app")
+                        .header("Access-Control-Request-Method", "GET"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void allowsNoOriginsWhenEnvironmentVariableIsEmpty() {
+        CorsConfigurationSource source = new SecurityConfig().corsConfigurationSource("");
+        HttpServletRequest request = new MockHttpServletRequest("OPTIONS", "/api/stores/nearby");
+
+        assertThat(source.getCorsConfiguration(request).getAllowedOrigins()).isEmpty();
     }
 }
