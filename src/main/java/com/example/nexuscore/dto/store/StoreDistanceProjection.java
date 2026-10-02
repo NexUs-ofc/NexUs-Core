@@ -1,4 +1,4 @@
-package com.example.nexuscore.repository;
+package com.example.nexuscore.dto.store;
 
 import java.math.BigDecimal;
 

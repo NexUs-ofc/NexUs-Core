@@ -1,9 +1,9 @@
 package com.example.nexuscore.mapper;
 
+import com.example.nexuscore.dto.store.StoreDistanceProjection;
 import com.example.nexuscore.dto.store.StoreResponse;
 import com.example.nexuscore.model.Address;
 import com.example.nexuscore.model.Store;
-import com.example.nexuscore.repository.StoreDistanceProjection;
 
 public final class StoreMapper {
 
