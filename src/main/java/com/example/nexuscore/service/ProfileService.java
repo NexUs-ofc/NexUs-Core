@@ -9,12 +9,15 @@ import com.example.nexuscore.geo.GeocodingService;
 import com.example.nexuscore.mapper.ProfileMapper;
 import com.example.nexuscore.model.Address;
 import com.example.nexuscore.model.Profile;
+import com.example.nexuscore.model.ProfileDietaryRestrictions;
 import com.example.nexuscore.model.ProfileType;
 import com.example.nexuscore.repository.AddressRepository;
+import com.example.nexuscore.repository.ProfileDietaryRestrictionsRepository;
 import com.example.nexuscore.repository.ProfileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -23,20 +26,23 @@ public class ProfileService {
     private final ProfileRepository repository;
     private final AddressRepository addressRepository;
     private final GeocodingService geocodingService;
+    private final ProfileDietaryRestrictionsRepository dietaryRestrictionsRepository;
 
     public ProfileService(ProfileRepository repository, AddressRepository addressRepository,
-                          GeocodingService geocodingService) {
+                          GeocodingService geocodingService,
+                          ProfileDietaryRestrictionsRepository dietaryRestrictionsRepository) {
         this.repository = repository;
         this.addressRepository = addressRepository;
         this.geocodingService = geocodingService;
+        this.dietaryRestrictionsRepository = dietaryRestrictionsRepository;
     }
 
     public ProfileResponse get(Integer profileId) {
-        return ProfileMapper.toResponse(findProfile(profileId));
+        return ProfileMapper.toResponse(findProfile(profileId), findDietaryRestrictions(profileId));
     }
 
     @Transactional
-    public ProfileResponse update(Integer profileId, ProfileRequest  request) {
+    public ProfileResponse update(Integer profileId, ProfileRequest request) {
         Profile profile = findProfile(profileId);
         if (request.name() != null) {
             profile.setName(request.name());
@@ -50,10 +56,33 @@ public class ProfileService {
         if (request.address() != null) {
             profile.setAddress(saveAddress(profile.getAddress(), request.address()));
         }
-
         validateRequiredAddress(profile);
 
-        return ProfileMapper.toResponse(profile);
+        if (request.dietaryRestrictions() != null) {
+            List<String> restrictions = normalizeRestrictions(request.dietaryRestrictions());
+            if (restrictions.isEmpty()) {
+                dietaryRestrictionsRepository.deleteById(profileId);
+            } else {
+                dietaryRestrictionsRepository.save(
+                        new ProfileDietaryRestrictions(profileId, restrictions));
+            }
+        }
+
+        return ProfileMapper.toResponse(profile, findDietaryRestrictions(profileId));
+    }
+
+    private List<String> findDietaryRestrictions(Integer profileId) {
+        return dietaryRestrictionsRepository.findById(profileId)
+                .map(ProfileDietaryRestrictions::getDietaryRestrictions)
+                .orElseGet(List::of);
+    }
+
+    private List<String> normalizeRestrictions(List<String> restrictions) {
+        List<String> normalized = restrictions.stream().map(String::trim).toList();
+        if (normalized.stream().distinct().count() != normalized.size()) {
+            throw new IllegalArgumentException("Restrições alimentares duplicadas");
+        }
+        return normalized;
     }
 
     private void validateRequiredAddress(Profile profile) {

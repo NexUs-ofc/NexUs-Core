@@ -19,6 +19,9 @@ spring:
   mongodb:
     uri: ${MONGODB_URI}
     database: ${MONGODB_DATABASE}
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
   web:
     error:
       include-message: never

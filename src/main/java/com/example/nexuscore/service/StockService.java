@@ -36,19 +36,22 @@ public class StockService {
     private final CategoryRepository categoryRepository;
     private final ProfileRepository profileRepository;
     private final GpcCategoryResolver gpcCategoryResolver;
+    private final ProductRankingService rankingService;
 
     public StockService(PantryItemRepository pantryItemRepository,
                          PantryProductSettingRepository settingRepository,
                          FoodRepository foodRepository,
                          CategoryRepository categoryRepository,
                          ProfileRepository profileRepository,
-                         GpcCategoryResolver gpcCategoryResolver) {
+                         GpcCategoryResolver gpcCategoryResolver,
+                         ProductRankingService rankingService) {
         this.pantryItemRepository = pantryItemRepository;
         this.settingRepository = settingRepository;
         this.foodRepository = foodRepository;
         this.categoryRepository = categoryRepository;
         this.profileRepository = profileRepository;
         this.gpcCategoryResolver = gpcCategoryResolver;
+        this.rankingService = rankingService;
     }
 
     public List<StockItemResponse> list(Integer profileId) {
@@ -88,7 +91,9 @@ public class StockService {
         Food food = foodRepository.findById(request.foodId())
                 .orElseThrow(() -> new NotFoundException("Alimento nao encontrado: " + request.foodId()));
         PantryItem item = new PantryItem(food, profile, request.quantity(), request.expiryDate());
-        return StockMapper.toResponse(pantryItemRepository.save(item));
+        PantryItem saved = pantryItemRepository.save(item);
+        rankingService.recordRegistered(saved.getId(), food.getId(), profile.getAddress());
+        return StockMapper.toResponse(saved);
     }
 
     @Transactional
@@ -97,10 +102,16 @@ public class StockService {
                 .orElseGet(() -> createFoodFromRegistration(request));
         Profile profile = profileRepository.getReferenceById(profileId);
         PantryItem item = new PantryItem(food, profile, request.quantity(), request.expiryDate());
-        return StockMapper.toResponse(pantryItemRepository.save(item));
+        PantryItem saved = pantryItemRepository.save(item);
+        rankingService.recordRegistered(saved.getId(), food.getId(), profile.getAddress());
+        return StockMapper.toResponse(saved);
     }
 
     private Food createFoodFromRegistration(FoodRegistrationRequest request) {
+        if (!gpcCategoryResolver.isKnownFoodBrick(request.gpcCode())) {
+            throw new IllegalArgumentException(
+                    "Informe um código GPC alimentar conhecido para cadastrar um novo produto");
+        }
         String categoryName = gpcCategoryResolver.resolve(request.gpcCode());
         Category category = categoryRepository.findByCategoryName(categoryName)
                 .orElseGet(() -> categoryRepository.save(new Category(categoryName)));
@@ -118,6 +129,10 @@ public class StockService {
         }
         if (request.expiryDate() != null) {
             item.setExpiryDate(request.expiryDate());
+            if (request.expiryDate().isBefore(LocalDate.now())) {
+                rankingService.recordExpired(item.getId(), item.getFood().getId(),
+                        item.getProfile().getAddress());
+            }
         }
         return StockMapper.toResponse(pantryItemRepository.save(item));
     }
