@@ -42,3 +42,7 @@ app:
     jwt-secret-base64: ${JWT_SECRET_BASE64}
   geocoding:
     user-agent: '${GEOCODING_USER_AGENT:NexUs-Core/1.0 (contato: suporte@nexus.app)}'
+
+notify:
+  integration:
+    token: ${NOTIFY_CORE_TOKEN:}
