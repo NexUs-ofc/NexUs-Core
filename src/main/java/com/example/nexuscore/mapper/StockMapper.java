@@ -1,5 +1,6 @@
 package com.example.nexuscore.mapper;
 
+import com.example.nexuscore.dto.notification.ProductCandidateResponse;
 import com.example.nexuscore.dto.stock.FoodResponse;
 import com.example.nexuscore.dto.stock.PantryProductSettingResponse;
 import com.example.nexuscore.dto.stock.StockItemResponse;
@@ -39,5 +40,10 @@ public final class StockMapper {
                 setting.getFood().getId(),
                 setting.getFood().getName(),
                 setting.getMinimumQuantity());
+    }
+
+    public static ProductCandidateResponse toNotificationCandidate(PantryItem item) {
+        return new ProductCandidateResponse(
+                item.getProfile().getId(), item.getId(), item.getFood().getName(), item.getExpiryDate());
     }
 }

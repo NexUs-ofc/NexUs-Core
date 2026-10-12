@@ -5,6 +5,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties({AuthProperties.class, GeocodingProperties.class})
+@EnableConfigurationProperties({AuthProperties.class, GeocodingProperties.class,
+        NotificationIntegrationProperties.class})
 public class CoreConfiguration {
 }
