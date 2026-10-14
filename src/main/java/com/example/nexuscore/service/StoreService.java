@@ -53,7 +53,7 @@ public class StoreService {
 
     public List<StoreResponse> nearby(Integer profileId, Double latitude, Double longitude, Double radiusKm) {
         GeoPoint point = resolveNearbyPoint(profileId, latitude, longitude);
-        double radius = radiusKm != null ? radiusKm : 10.0;
+        double radius = radiusKm != null ? radiusKm : 5.0;
         if (radius <= 0 || radius > 100) {
             throw new IllegalArgumentException("Raio deve ser maior que zero e menor ou igual a 100 km");
         }

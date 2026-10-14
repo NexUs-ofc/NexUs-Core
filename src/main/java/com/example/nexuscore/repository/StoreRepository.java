@@ -41,23 +41,31 @@ public interface StoreRepository extends JpaRepository<Store, Integer> {
                     s.cnpj as cnpj,
                     s.opening_time as openingTime,
                     s.closing_time as closingTime,
+                    (ST_Distance(
+                    ST_SetSRID(
+                        ST_MakePoint(a.longitude::double precision, a.latitude::double precision), 4326
+                    )::geography,
+                        ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography
+                    ) / 1000.0) as distanceKm,
                     a.street as street,
                     a.number as number,
                     a.neighborhood as neighborhood,
                     a.city as city,
                     a.state as state,
                     a.latitude as latitude,
-                    a.longitude as longitude,
-                    (6371 * acos(
-                        cos(radians(:lat)) * cos(radians(a.latitude)) * cos(radians(a.longitude) - radians(:lng))
-                        + sin(radians(:lat)) * sin(radians(a.latitude))
-                    )) as distanceKm
+                    a.longitude as longitude
                 from store s
                 join profile p on p.id = s.profile_id
                 join address a on a.id = p.address_id
                 where a.latitude is not null and a.longitude is not null
+                    and ST_DWithin(
+                        ST_SetSRID(
+                            ST_MakePoint(a.longitude::double precision, a.latitude::double precision), 4326
+                        )::geography,
+                        ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography,
+                        :radiusKm * 1000.0
+                    )
             ) ranked
-            where distanceKm <= :radiusKm
             order by distanceKm asc
             """, nativeQuery = true)
     List<StoreDistanceProjection> findNearby(@Param("lat") double lat,
