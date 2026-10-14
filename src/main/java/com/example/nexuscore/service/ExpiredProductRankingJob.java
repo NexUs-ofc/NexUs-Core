@@ -29,7 +29,8 @@ public class ExpiredProductRankingJob {
         Slice<PantryItem> page;
         do {
             page = pantryItemRepository.findByExpiryDateBefore(LocalDate.now(),
-                    PageRequest.of(pageNumber++, BATCH_SIZE, Sort.by("id").ascending()));
+                    PageRequest.of(pageNumber++, BATCH_SIZE,
+                            Sort.by(Sort.Order.asc("expiryDate"), Sort.Order.asc("id"))));
             for (PantryItem item : page.getContent()) {
                 rankingService.recordExpired(item.getId(), item.getFood().getId(),
                         item.getProfile().getAddress());
