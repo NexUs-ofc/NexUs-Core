@@ -1,6 +1,7 @@
 package com.example.nexuscore.service;
 
 import com.example.nexuscore.model.PantryItem;
+import com.example.nexuscore.model.ProfileStatus;
 import com.example.nexuscore.repository.PantryItemRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -28,7 +29,7 @@ public class ExpiredProductRankingJob {
         int pageNumber = 0;
         Slice<PantryItem> page;
         do {
-            page = pantryItemRepository.findByExpiryDateBefore(LocalDate.now(),
+            page = pantryItemRepository.findExpiredByStatus(LocalDate.now(), ProfileStatus.ACTIVE,
                     PageRequest.of(pageNumber++, BATCH_SIZE,
                             Sort.by(Sort.Order.asc("expiryDate"), Sort.Order.asc("id"))));
             for (PantryItem item : page.getContent()) {

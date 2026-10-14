@@ -11,6 +11,7 @@ import com.example.nexuscore.mapper.StoreMapper;
 import com.example.nexuscore.model.Address;
 import com.example.nexuscore.model.Company;
 import com.example.nexuscore.model.Profile;
+import com.example.nexuscore.model.ProfileStatus;
 import com.example.nexuscore.model.ProfileType;
 import com.example.nexuscore.model.Store;
 import com.example.nexuscore.repository.AddressRepository;
@@ -43,12 +44,15 @@ public class StoreService {
     }
 
     public StoreResponse get(Integer id) {
-        return StoreMapper.toResponse(repository.findById(id)
+        return StoreMapper.toResponse(repository.findByIdForActiveProfiles(
+                        id, ProfileStatus.ACTIVE, ProfileStatus.ACTIVE)
                 .orElseThrow(() -> new NotFoundException("Loja nao encontrada: " + id)));
     }
 
     public List<StoreResponse> list() {
-        return repository.findAll().stream().map(StoreMapper::toResponse).toList();
+        return repository.findAllForActiveProfiles(
+                        ProfileStatus.ACTIVE, ProfileStatus.ACTIVE).stream()
+                .map(StoreMapper::toResponse).toList();
     }
 
     public List<StoreResponse> nearby(Integer profileId, Double latitude, Double longitude, Double radiusKm) {

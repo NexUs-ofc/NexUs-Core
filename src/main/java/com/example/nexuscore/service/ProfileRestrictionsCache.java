@@ -66,7 +66,6 @@ public class ProfileRestrictionsCache {
         List<String> restrictions = List.copyOf(loader.get());
         if (available) {
             try {
-                // A versão impede uma leitura antiga de repovoar o cache após uma edição concorrente.
                 redis.execute(CACHE_IF_UNCHANGED, List.of(key, key + ":version"), revision,
                         mapper.writeValueAsString(restrictions), Long.toString(ttlSeconds));
             } catch (RuntimeException exception) {

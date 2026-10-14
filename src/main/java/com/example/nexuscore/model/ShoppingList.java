@@ -1,6 +1,7 @@
 package com.example.nexuscore.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ public class ShoppingList {
     @Id
     private String id;
 
+    @Indexed(name = "idx_shopping_list_household_id")
     @Field("household_id")
     private Integer householdId;
 

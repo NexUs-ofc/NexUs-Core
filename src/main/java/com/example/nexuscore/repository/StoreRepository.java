@@ -1,20 +1,20 @@
 package com.example.nexuscore.repository;
 
-import com.example.nexuscore.dto.store.StoreDistanceProjection;
 import com.example.nexuscore.dto.notification.NearbyHouseholdProjection;
 import com.example.nexuscore.dto.notification.NearbyStorePairProjection;
 import com.example.nexuscore.dto.notification.NewStoreProjection;
-import com.example.nexuscore.model.Store;
+import com.example.nexuscore.dto.store.StoreDistanceProjection;
 import com.example.nexuscore.model.ProfileStatus;
+import com.example.nexuscore.model.Store;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.time.LocalDateTime;
 
 public interface StoreRepository extends JpaRepository<Store, Integer> {
 
@@ -23,16 +23,21 @@ public interface StoreRepository extends JpaRepository<Store, Integer> {
     Optional<Store> findById(Integer id);
 
     @EntityGraph(attributePaths = {"profile", "profile.address", "company", "company.profile"})
-    Optional<Store> findByIdAndProfile_StatusAndCompany_Profile_Status(
-            Integer id, ProfileStatus storeStatus, ProfileStatus companyStatus);
+    @Query("select s from Store s where s.id = :id and s.profile.status = :storeStatus "
+            + "and s.company.profile.status = :companyStatus")
+    Optional<Store> findByIdForActiveProfiles(@Param("id") Integer id,
+                                              @Param("storeStatus") ProfileStatus storeStatus,
+                                              @Param("companyStatus") ProfileStatus companyStatus);
 
     @Override
     @EntityGraph(attributePaths = {"profile", "profile.address"})
     List<Store> findAll();
 
     @EntityGraph(attributePaths = {"profile", "profile.address", "company", "company.profile"})
-    List<Store> findAllByProfile_StatusAndCompany_Profile_Status(
-            ProfileStatus storeStatus, ProfileStatus companyStatus);
+    @Query("select s from Store s where s.profile.status = :storeStatus "
+            + "and s.company.profile.status = :companyStatus")
+    List<Store> findAllForActiveProfiles(@Param("storeStatus") ProfileStatus storeStatus,
+                                         @Param("companyStatus") ProfileStatus companyStatus);
 
     boolean existsByCnpj(String cnpj);
 
@@ -61,8 +66,10 @@ public interface StoreRepository extends JpaRepository<Store, Integer> {
     @Query(value = """
             select h.id as "profileId", s.id as "storeId", sp.name as "storeName",
                 ST_Distance(
-                    ST_SetSRID(ST_MakePoint(ha.longitude::double precision, ha.latitude::double precision), 4326)::geography,
-                    ST_SetSRID(ST_MakePoint(sa.longitude::double precision, sa.latitude::double precision), 4326)::geography
+                    ST_SetSRID(ST_MakePoint(ha.longitude::double precision,
+                        ha.latitude::double precision), 4326)::geography,
+                    ST_SetSRID(ST_MakePoint(sa.longitude::double precision,
+                        sa.latitude::double precision), 4326)::geography
                 ) / 1000.0 as "distanceKm"
             from profile h
             join address ha on ha.id = h.address_id
@@ -80,8 +87,10 @@ public interface StoreRepository extends JpaRepository<Store, Integer> {
                 and ha.latitude is not null and ha.longitude is not null
                 and sa.latitude is not null and sa.longitude is not null
                 and ST_DWithin(
-                    ST_SetSRID(ST_MakePoint(ha.longitude::double precision, ha.latitude::double precision), 4326)::geography,
-                    ST_SetSRID(ST_MakePoint(sa.longitude::double precision, sa.latitude::double precision), 4326)::geography,
+                    ST_SetSRID(ST_MakePoint(ha.longitude::double precision,
+                        ha.latitude::double precision), 4326)::geography,
+                    ST_SetSRID(ST_MakePoint(sa.longitude::double precision,
+                        sa.latitude::double precision), 4326)::geography,
                     :radiusKm * 1000.0
                 )
             order by h.id, "distanceKm", s.id
@@ -106,8 +115,10 @@ public interface StoreRepository extends JpaRepository<Store, Integer> {
                 and ha.latitude is not null and ha.longitude is not null
                 and sa.latitude is not null and sa.longitude is not null
                 and ST_DWithin(
-                    ST_SetSRID(ST_MakePoint(ha.longitude::double precision, ha.latitude::double precision), 4326)::geography,
-                    ST_SetSRID(ST_MakePoint(sa.longitude::double precision, sa.latitude::double precision), 4326)::geography,
+                    ST_SetSRID(ST_MakePoint(ha.longitude::double precision,
+                        ha.latitude::double precision), 4326)::geography,
+                    ST_SetSRID(ST_MakePoint(sa.longitude::double precision,
+                        sa.latitude::double precision), 4326)::geography,
                     :radiusKm * 1000.0
                 )
             order by h.id
