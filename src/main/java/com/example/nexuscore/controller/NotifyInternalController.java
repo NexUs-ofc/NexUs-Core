@@ -1,6 +1,8 @@
 package com.example.nexuscore.controller;
 
 import com.example.nexuscore.dto.notification.EventNotificationCandidate;
+import com.example.nexuscore.dto.notification.NearbyStoreCandidate;
+import com.example.nexuscore.dto.notification.NewStoreCandidate;
 import com.example.nexuscore.dto.notification.NotificationCandidatePage;
 import com.example.nexuscore.dto.notification.ProductNotificationCandidate;
 import com.example.nexuscore.service.NotificationCandidateService;
@@ -52,6 +54,28 @@ public class NotifyInternalController {
             @RequestParam(defaultValue = "100") int size) {
         authorize(token);
         return candidateService.events(from, to, page, size);
+    }
+
+    @GetMapping("/nearby-stores")
+    public NotificationCandidatePage<NearbyStoreCandidate> nearbyStores(
+            @RequestHeader(value = TOKEN_HEADER, required = false) String token,
+            @RequestParam(defaultValue = "5") double radiusKm,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        authorize(token);
+        return candidateService.nearbyStores(radiusKm, page, size);
+    }
+
+    @GetMapping("/new-stores")
+    public NotificationCandidatePage<NewStoreCandidate> newStores(
+            @RequestHeader(value = TOKEN_HEADER, required = false) String token,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(defaultValue = "5") double radiusKm,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        authorize(token);
+        return candidateService.newStores(from, to, radiusKm, page, size);
     }
 
     private void authorize(String token) {
