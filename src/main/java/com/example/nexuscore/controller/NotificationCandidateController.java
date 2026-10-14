@@ -1,8 +1,10 @@
 package com.example.nexuscore.controller;
 
-import com.example.nexuscore.dto.notification.CandidatePageResponse;
-import com.example.nexuscore.dto.notification.EventCandidateResponse;
-import com.example.nexuscore.dto.notification.ProductCandidateResponse;
+import com.example.nexuscore.dto.notification.EventNotificationCandidate;
+import com.example.nexuscore.dto.notification.NearbyStoreCandidate;
+import com.example.nexuscore.dto.notification.NewStoreCandidate;
+import com.example.nexuscore.dto.notification.NotificationCandidatePage;
+import com.example.nexuscore.dto.notification.ProductNotificationCandidate;
 import com.example.nexuscore.service.NotificationCandidateService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +24,7 @@ public class NotificationCandidateController {
     }
 
     @GetMapping("/products")
-    public CandidatePageResponse<ProductCandidateResponse> products(
+    public NotificationCandidatePage<ProductNotificationCandidate> products(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(defaultValue = "0") int page,
@@ -31,11 +33,29 @@ public class NotificationCandidateController {
     }
 
     @GetMapping("/events")
-    public CandidatePageResponse<EventCandidateResponse> events(
+    public NotificationCandidatePage<EventNotificationCandidate> events(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "100") int size) {
         return service.events(from, to, page, size);
+    }
+
+    @GetMapping("/nearby-stores")
+    public NotificationCandidatePage<NearbyStoreCandidate> nearbyStores(
+            @RequestParam(defaultValue = "5") double radiusKm,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        return service.nearbyStores(radiusKm, page, size);
+    }
+
+    @GetMapping("/new-stores")
+    public NotificationCandidatePage<NewStoreCandidate> newStores(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(defaultValue = "5") double radiusKm,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        return service.newStores(from, to, radiusKm, page, size);
     }
 }

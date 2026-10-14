@@ -52,8 +52,6 @@ app:
     grace-days: ${BILLING_GRACE_DAYS:0}
     monthly-payments-cron: "${BILLING_MONTHLY_PAYMENTS_CRON:0 10 0 1 * *}"
     overdue-payments-cron: "${BILLING_OVERDUE_PAYMENTS_CRON:0 15 0 * * *}"
-  notify:
-    shared-token: ${NOTIFY_CORE_TOKEN:}
   profile:
     dietary-restrictions-cache-ttl-seconds: ${PROFILE_DIETARY_RESTRICTIONS_CACHE_TTL_SECONDS:86400}
   auth:
