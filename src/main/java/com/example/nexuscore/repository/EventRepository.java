@@ -12,5 +12,6 @@ public interface EventRepository extends MongoRepository<Event, ObjectId> {
 
     List<Event> findByHouseholdId(Integer householdId);
 
-    Slice<Event> findByDateGreaterThanEqualAndDateLessThan(LocalDateTime from, LocalDateTime until, Pageable pageable);
+    Slice<Event> findByDateGreaterThanEqualAndDateLessThanOrderByDateAscIdAsc(
+            LocalDateTime from, LocalDateTime until, Pageable pageable);
 }

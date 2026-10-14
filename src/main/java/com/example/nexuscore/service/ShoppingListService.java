@@ -17,9 +17,11 @@ import java.util.List;
 public class ShoppingListService {
 
     private final ShoppingListRepository repository;
+    private final ActivityRecordService activityRecordService;
 
-    public ShoppingListService(ShoppingListRepository repository) {
+    public ShoppingListService(ShoppingListRepository repository, ActivityRecordService activityRecordService) {
         this.repository = repository;
+        this.activityRecordService = activityRecordService;
     }
 
     public List<ShoppingListResponse> list(Integer householdId) {
@@ -32,25 +34,36 @@ public class ShoppingListService {
 
     public ShoppingListResponse create(Integer householdId, ShoppingListRequest request) {
         ShoppingList list = new ShoppingList(householdId, request.title(), request.eventId());
-        return ShoppingListMapper.toResponse(repository.save(list));
+        ShoppingList saved = repository.save(list);
+        activityRecordService.record(householdId, "shopping_list_created",
+                "Criou a lista de compras " + request.title());
+        return ShoppingListMapper.toResponse(saved);
     }
 
     public ShoppingListResponse rename(Integer householdId, String id, ShoppingListRequest request) {
         ShoppingList list = findOwned(householdId, id);
         list.setTitle(request.title());
-        return ShoppingListMapper.toResponse(repository.save(list));
+        ShoppingList saved = repository.save(list);
+        activityRecordService.record(householdId, "shopping_list_renamed",
+                "Renomeou uma lista de compras para " + request.title());
+        return ShoppingListMapper.toResponse(saved);
     }
 
     public void remove(Integer householdId, String id) {
         ShoppingList list = findOwned(householdId, id);
         repository.delete(list);
+        activityRecordService.record(householdId, "shopping_list_removed",
+                "Removeu a lista de compras " + list.getTitle());
     }
 
     public ShoppingListResponse addItem(Integer householdId, String id, ShoppingListItemRequest request) {
         ShoppingList list = findOwned(householdId, id);
         list.getArrayList().add(new ShoppingListItem(
                 request.foodId(), request.name(), request.quantity(), request.unitOfMeasure(), false));
-        return ShoppingListMapper.toResponse(repository.save(list));
+        ShoppingList saved = repository.save(list);
+        activityRecordService.record(householdId, "shopping_item_added",
+                "Adicionou " + request.quantity() + " unidade(s) de " + request.name() + " à lista de compras");
+        return ShoppingListMapper.toResponse(saved);
     }
 
     public ShoppingListResponse updateItem(Integer householdId, String id, String itemId,
@@ -63,14 +76,20 @@ public class ShoppingListService {
         if (request.checked() != null) {
             item.setChecked(request.checked());
         }
-        return ShoppingListMapper.toResponse(repository.save(list));
+        ShoppingList saved = repository.save(list);
+        activityRecordService.record(householdId, "shopping_item_updated",
+                "Atualizou o item " + item.getName() + " na lista de compras");
+        return ShoppingListMapper.toResponse(saved);
     }
 
     public ShoppingListResponse removeItem(Integer householdId, String id, String itemId) {
         ShoppingList list = findOwned(householdId, id);
         ShoppingListItem item = findItem(list, itemId);
         list.getArrayList().remove(item);
-        return ShoppingListMapper.toResponse(repository.save(list));
+        ShoppingList saved = repository.save(list);
+        activityRecordService.record(householdId, "shopping_item_removed",
+                "Removeu " + item.getName() + " da lista de compras");
+        return ShoppingListMapper.toResponse(saved);
     }
 
     private ShoppingListItem findItem(ShoppingList list, String itemId) {

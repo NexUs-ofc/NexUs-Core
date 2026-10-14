@@ -18,4 +18,8 @@ public class GpcCategoryResolver {
         return BRICK_TO_CATEGORY.getOrDefault(gpcBrickCode.trim(), FoodCategory.OTHER)
                 .getDisplayName();
     }
+
+    public boolean isKnownFoodBrick(String gpcBrickCode) {
+        return gpcBrickCode != null && BRICK_TO_CATEGORY.containsKey(gpcBrickCode.trim());
+    }
 }

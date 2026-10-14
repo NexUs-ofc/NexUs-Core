@@ -13,9 +13,28 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       MONGODB_URI: ${MONGODB_URI}
       MONGODB_DATABASE: ${MONGODB_DATABASE}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       JWT_SECRET_BASE64: ${JWT_SECRET_BASE64}
       # Lista de origens separadas por vírgulas (ex.: https://app.example.com,http://localhost:3000).
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
       JWT_ISSUER: ${JWT_ISSUER:-nexus-auth}
       GEOCODING_USER_AGENT: ${GEOCODING_USER_AGENT:-NexUs-Core/1.0}
     restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  redis-data:

@@ -1,6 +1,8 @@
 spring:
   config:
-    import: optional:file:src/main/resources/.env.properties
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:src/main/resources/.env.properties
   application:
     name: NexUs-Core
   datasource:
@@ -19,6 +21,12 @@ spring:
   mongodb:
     uri: ${MONGODB_URI}
     database: ${MONGODB_DATABASE}
+    auto-index-creation: true
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+      connect-timeout: ${REDIS_CONNECT_TIMEOUT:2s}
+      timeout: ${REDIS_TIMEOUT:2s}
   web:
     error:
       include-message: never
@@ -37,6 +45,15 @@ server:
   forward-headers-strategy: framework
 
 app:
+  scheduling:
+    zone: ${BUSINESS_TIME_ZONE:America/Sao_Paulo}
+  billing:
+    due-day: ${BILLING_DUE_DAY:10}
+    grace-days: ${BILLING_GRACE_DAYS:0}
+    monthly-payments-cron: "${BILLING_MONTHLY_PAYMENTS_CRON:0 10 0 1 * *}"
+    overdue-payments-cron: "${BILLING_OVERDUE_PAYMENTS_CRON:0 15 0 * * *}"
+  profile:
+    dietary-restrictions-cache-ttl-seconds: ${PROFILE_DIETARY_RESTRICTIONS_CACHE_TTL_SECONDS:86400}
   auth:
     issuer: ${JWT_ISSUER:nexus-auth}
     jwt-secret-base64: ${JWT_SECRET_BASE64}

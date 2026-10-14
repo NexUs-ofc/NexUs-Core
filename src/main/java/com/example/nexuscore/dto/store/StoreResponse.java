@@ -1,6 +1,8 @@
 package com.example.nexuscore.dto.store;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.math.BigDecimal;
+import java.time.LocalTime;
 
 public record StoreResponse(
         Integer id,
@@ -13,5 +15,7 @@ public record StoreResponse(
         String state,
         BigDecimal latitude,
         BigDecimal longitude,
-        Double distanceKm
+        Double distanceKm,
+        @JsonFormat(pattern = "HH:mm") LocalTime openingTime,
+        @JsonFormat(pattern = "HH:mm") LocalTime closingTime
 ) {}
