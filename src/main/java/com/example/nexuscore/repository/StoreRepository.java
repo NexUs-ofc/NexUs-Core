@@ -39,6 +39,8 @@ public interface StoreRepository extends JpaRepository<Store, Integer> {
                     s.id as id,
                     p.name as name,
                     s.cnpj as cnpj,
+                    s.opening_time as openingTime,
+                    s.closing_time as closingTime,
                     a.street as street,
                     a.number as number,
                     a.neighborhood as neighborhood,

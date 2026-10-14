@@ -1,6 +1,7 @@
 package com.example.nexuscore.dto.store;
 
 import java.math.BigDecimal;
+import java.time.LocalTime;
 
 public interface StoreDistanceProjection {
     Integer getId();
@@ -14,4 +15,6 @@ public interface StoreDistanceProjection {
     BigDecimal getLatitude();
     BigDecimal getLongitude();
     Double getDistanceKm();
+    LocalTime getOpeningTime();
+    LocalTime getClosingTime();
 }

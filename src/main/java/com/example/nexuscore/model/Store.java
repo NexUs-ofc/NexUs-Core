@@ -9,9 +9,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "store")
@@ -32,6 +35,12 @@ public class Store {
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "profile_id", nullable = false, unique = true)
     private Profile profile;
+
+    @Column(name = "opening_time")
+    private LocalTime openingTime;
+
+    @Column(name = "closing_time")
+    private LocalTime closingTime;
 
     protected Store() {
     }
@@ -60,5 +69,34 @@ public class Store {
 
     public void setCnpj(String cnpj) {
         this.cnpj = cnpj;
+    }
+
+    public LocalTime getOpeningTime() {
+        return openingTime;
+    }
+
+    public LocalTime getClosingTime() {
+        return closingTime;
+    }
+
+    public void setBusinessHours(LocalTime openingTime, LocalTime closingTime) {
+        validateBusinessHours(openingTime, closingTime);
+        this.openingTime = openingTime;
+        this.closingTime = closingTime;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void validateBusinessHours() {
+        validateBusinessHours(openingTime, closingTime);
+    }
+
+    private static void validateBusinessHours(LocalTime openingTime, LocalTime closingTime) {
+        if ((openingTime == null) != (closingTime == null)) {
+            throw new IllegalArgumentException("Horario de abertura e fechamento devem ser informados juntos");
+        }
+        if (openingTime != null && !closingTime.isAfter(openingTime)) {
+            throw new IllegalArgumentException("Horario de fechamento deve ser posterior ao de abertura");
+        }
     }
 }

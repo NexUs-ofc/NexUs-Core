@@ -92,12 +92,16 @@ public class StoreService {
                 request.phones() == null ? new LinkedHashSet<>() : new LinkedHashSet<>(request.phones())));
 
         Store store = new Store(request.cnpj(), company, storeProfile);
+        store.setBusinessHours(request.openingTime(), request.closingTime());
         return StoreMapper.toResponse(repository.save(store));
     }
 
     @Transactional
     public StoreResponse updateCompanyStore(Integer profileId, Integer id, StoreUpdateRequest request) {
         Store store = findOwned(profileId, id);
+        if (request.openingTime() != null || request.closingTime() != null) {
+            store.setBusinessHours(request.openingTime(), request.closingTime());
+        }
         if (request.cnpj() != null) {
             if (repository.existsByCnpjAndIdNot(request.cnpj(), store.getId())) {
                 throw new IllegalArgumentException("CNPJ ja cadastrado");
