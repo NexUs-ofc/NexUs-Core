@@ -4,54 +4,35 @@ import com.example.nexuscore.dto.recipe.RecipeResponse;
 import com.example.nexuscore.exception.NotFoundException;
 import com.example.nexuscore.mapper.RecipeMapper;
 import com.example.nexuscore.model.Recipe;
-import com.example.nexuscore.model.RecipeAccount;
-import com.example.nexuscore.repository.RecipeAccountRepository;
 import com.example.nexuscore.repository.RecipeRepository;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 public class RecipeService {
 
     private final RecipeRepository recipeRepository;
-    private final RecipeAccountRepository recipeAccountRepository;
+    private final ActivityRecordService activityRecordService;
 
-    public RecipeService(RecipeRepository recipeRepository, RecipeAccountRepository recipeAccountRepository) {
+    public RecipeService(RecipeRepository recipeRepository, ActivityRecordService activityRecordService) {
         this.recipeRepository = recipeRepository;
-        this.recipeAccountRepository = recipeAccountRepository;
+        this.activityRecordService = activityRecordService;
     }
 
     public List<RecipeResponse> listSaved(Integer accountId) {
-        List<RecipeAccount> links = recipeAccountRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
-        List<ObjectId> recipeIds = links.stream().map(RecipeAccount::getRecipeId).toList();
-        Map<ObjectId, Recipe> recipesById = recipeRepository.findAllById(recipeIds).stream()
-                .collect(Collectors.toMap(Recipe::getId, Function.identity()));
-
-        return links.stream()
-                .map(link -> recipesById.get(link.getRecipeId()))
-                .filter(recipe -> recipe != null)
+        return recipeRepository.findByAccountIdOrderByCreatedAtDesc(accountId).stream()
                 .map(RecipeMapper::toResponse)
                 .toList();
     }
 
-    public RecipeResponse favorite(Integer accountId, String recipeId) {
+    public void deleteSaved(Integer accountId, String recipeId) {
         ObjectId objectId = parseRecipeId(recipeId);
-        Recipe recipe = recipeRepository.findById(objectId)
+        Recipe recipe = recipeRepository.findByIdAndAccountId(objectId, accountId)
                 .orElseThrow(() -> new NotFoundException("Receita nao encontrada: " + recipeId));
-
-        recipeAccountRepository.findByRecipeIdAndAccountId(objectId, accountId)
-                .orElseGet(() -> recipeAccountRepository.save(new RecipeAccount(objectId, accountId)));
-        return RecipeMapper.toResponse(recipe);
-    }
-
-    public void unfavorite(Integer accountId, String recipeId) {
-        ObjectId objectId = parseRecipeId(recipeId);
-        recipeAccountRepository.findByRecipeIdAndAccountId(objectId, accountId)
-                .ifPresent(recipeAccountRepository::delete);
+        recipeRepository.delete(recipe);
+        activityRecordService.record(accountId, "saved_recipe_removed",
+                "Removeu a receita salva " + recipe.getTitle());
     }
 
     private ObjectId parseRecipeId(String recipeId) {

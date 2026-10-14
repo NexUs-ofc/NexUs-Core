@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,14 +29,9 @@ public class RecipeController {
         return service.listSaved(currentProfile.profileId().intValue());
     }
 
-    @PostMapping("/{id}/favorite")
-    public RecipeResponse favorite(@PathVariable String id) {
-        return service.favorite(currentProfile.profileId().intValue(), id);
-    }
-
-    @DeleteMapping("/{id}/favorite")
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void unfavorite(@PathVariable String id) {
-        service.unfavorite(currentProfile.profileId().intValue(), id);
+    public void deleteSaved(@PathVariable String id) {
+        service.deleteSaved(currentProfile.profileId().intValue(), id);
     }
 }
