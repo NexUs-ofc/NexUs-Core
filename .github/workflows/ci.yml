@@ -28,6 +28,9 @@ jobs:
           java-version: "17"
           cache: maven
 
+      - name: Grant permission to Maven Wrapper
+        run: chmod +x mvnw
+
       - name: Run unit tests
         run: ./mvnw test
 
@@ -46,6 +49,9 @@ jobs:
           java-version: "17"
           cache: maven
 
+      - name: Grant permission to Maven Wrapper
+        run: chmod +x mvnw
+
       - name: Run Checkstyle
         run: ./mvnw checkstyle:check
 
@@ -63,6 +69,9 @@ jobs:
           distribution: temurin
           java-version: "17"
           cache: maven
+
+      - name: Grant permission to Maven Wrapper
+        run: chmod +x mvnw
 
       - name: Build JAR
         run: ./mvnw clean package -DskipTests
