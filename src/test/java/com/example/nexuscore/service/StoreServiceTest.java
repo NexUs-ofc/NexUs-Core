@@ -45,11 +45,11 @@ class StoreServiceTest {
         Profile profile = mock(Profile.class);
         when(profile.getAddress()).thenReturn(address);
         when(profileRepository.findById(12)).thenReturn(Optional.of(profile));
-        when(repository.findNearby(-23.55052, -46.633308, 10.0)).thenReturn(List.of());
+        when(repository.findNearby(-23.55052, -46.633308, 5.0)).thenReturn(List.of());
 
         assertEquals(List.of(), service.nearby(12, null, null, null));
 
-        verify(repository).findNearby(-23.55052, -46.633308, 10.0);
+        verify(repository).findNearby(-23.55052, -46.633308, 5.0);
     }
 
     @Test
