@@ -33,7 +33,7 @@ class ProfileServiceTest {
         when(addresses.save(address)).thenReturn(address);
 
         service.update(12, new ProfileRequest(null, null, null,
-                new AddressRequest("Centro", "Rua A", "10", "01002000", "Sao Paulo", "SP")));
+                new AddressRequest("Centro", "Rua A", "10", "01002000", "Sao Paulo", "SP"), null));
 
         assertEquals("01002000", address.getCep());
         assertEquals(new BigDecimal("-23.550520"), address.getLatitude());
