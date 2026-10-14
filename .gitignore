@@ -33,6 +33,7 @@ build/
 .vscode/
 
 ### Project
+.env
 .env.env
 src/main/resources/.env.properties
 .DS_Store

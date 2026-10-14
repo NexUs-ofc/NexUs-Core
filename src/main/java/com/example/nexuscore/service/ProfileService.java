@@ -24,17 +24,21 @@ public class ProfileService {
     private final ProfileRepository repository;
     private final AddressRepository addressRepository;
     private final GeocodingService geocodingService;
+    private final ProfileRestrictionsCache restrictionsCache;
 
     public ProfileService(ProfileRepository repository, AddressRepository addressRepository,
-                          GeocodingService geocodingService) {
+                          GeocodingService geocodingService, ProfileRestrictionsCache restrictionsCache) {
         this.repository = repository;
         this.addressRepository = addressRepository;
         this.geocodingService = geocodingService;
+        this.restrictionsCache = restrictionsCache;
     }
 
     public ProfileResponse get(Integer profileId) {
+        List<String> restrictions = restrictionsCache.get(profileId,
+                () -> findProfile(profileId).getDietaryRestrictions());
         Profile profile = findProfile(profileId);
-        return ProfileMapper.toResponse(profile, profile.getDietaryRestrictions());
+        return ProfileMapper.toResponse(profile, restrictions);
     }
 
     @Transactional
@@ -56,6 +60,7 @@ public class ProfileService {
 
         if (request.dietaryRestrictions() != null) {
             profile.setDietaryRestrictions(normalizeRestrictions(request.dietaryRestrictions()));
+            restrictionsCache.invalidateAfterCommit(profileId);
         }
 
         return ProfileMapper.toResponse(profile, profile.getDietaryRestrictions());

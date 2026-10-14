@@ -1,6 +1,8 @@
 spring:
   config:
-    import: optional:file:src/main/resources/.env.properties
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:src/main/resources/.env.properties
   application:
     name: NexUs-Core
   datasource:
@@ -22,6 +24,8 @@ spring:
   data:
     redis:
       url: ${REDIS_URL:redis://localhost:6379}
+      connect-timeout: ${REDIS_CONNECT_TIMEOUT:2s}
+      timeout: ${REDIS_TIMEOUT:2s}
   web:
     error:
       include-message: never
@@ -40,6 +44,8 @@ server:
   forward-headers-strategy: framework
 
 app:
+  profile:
+    dietary-restrictions-cache-ttl-seconds: ${PROFILE_DIETARY_RESTRICTIONS_CACHE_TTL_SECONDS:86400}
   auth:
     issuer: ${JWT_ISSUER:nexus-auth}
     jwt-secret-base64: ${JWT_SECRET_BASE64}
