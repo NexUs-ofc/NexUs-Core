@@ -26,7 +26,7 @@ class StockServiceTest {
         PantryProductSettingRepository settings = mock(PantryProductSettingRepository.class);
         StockService service = new StockService(items, settings, mock(FoodRepository.class),
                 mock(CategoryRepository.class), mock(ProfileRepository.class), mock(GpcCategoryResolver.class),
-                mock(ProductRankingService.class));
+                mock(ProductRankingService.class), mock(ActivityRecordService.class));
         Food food = mock(Food.class);
         PantryProductSetting setting = mock(PantryProductSetting.class);
         when(food.getId()).thenReturn(7);

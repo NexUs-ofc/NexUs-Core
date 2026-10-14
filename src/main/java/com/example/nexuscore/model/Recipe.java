@@ -4,6 +4,7 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +25,12 @@ public class Recipe {
 
     @Field("created_by")
     private String createdBy;
+
+    @Field("account_id")
+    private Integer accountId;
+
+    @Field("created_at")
+    private Instant createdAt;
 
     protected Recipe() {
     }
@@ -50,5 +57,13 @@ public class Recipe {
 
     public String getCreatedBy() {
         return createdBy;
+    }
+
+    public Integer getAccountId() {
+        return accountId;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
     }
 }

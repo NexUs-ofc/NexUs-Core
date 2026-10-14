@@ -37,6 +37,7 @@ public class StockService {
     private final ProfileRepository profileRepository;
     private final GpcCategoryResolver gpcCategoryResolver;
     private final ProductRankingService rankingService;
+    private final ActivityRecordService activityRecordService;
 
     public StockService(PantryItemRepository pantryItemRepository,
                          PantryProductSettingRepository settingRepository,
@@ -44,7 +45,8 @@ public class StockService {
                          CategoryRepository categoryRepository,
                          ProfileRepository profileRepository,
                          GpcCategoryResolver gpcCategoryResolver,
-                         ProductRankingService rankingService) {
+                         ProductRankingService rankingService,
+                         ActivityRecordService activityRecordService) {
         this.pantryItemRepository = pantryItemRepository;
         this.settingRepository = settingRepository;
         this.foodRepository = foodRepository;
@@ -52,6 +54,7 @@ public class StockService {
         this.profileRepository = profileRepository;
         this.gpcCategoryResolver = gpcCategoryResolver;
         this.rankingService = rankingService;
+        this.activityRecordService = activityRecordService;
     }
 
     public List<StockItemResponse> list(Integer profileId) {
@@ -93,6 +96,8 @@ public class StockService {
         PantryItem item = new PantryItem(food, profile, request.quantity(), request.expiryDate());
         PantryItem saved = pantryItemRepository.save(item);
         rankingService.recordRegistered(saved.getId(), food.getId(), profile.getAddress());
+        activityRecordService.record(profileId, "stock_item_added",
+                "Adicionou " + request.quantity() + " unidade(s) de " + food.getName() + " ao estoque");
         return StockMapper.toResponse(saved);
     }
 
@@ -104,6 +109,8 @@ public class StockService {
         PantryItem item = new PantryItem(food, profile, request.quantity(), request.expiryDate());
         PantryItem saved = pantryItemRepository.save(item);
         rankingService.recordRegistered(saved.getId(), food.getId(), profile.getAddress());
+        activityRecordService.record(profileId, "stock_item_added",
+                "Adicionou " + request.quantity() + " unidade(s) de " + food.getName() + " ao estoque");
         return StockMapper.toResponse(saved);
     }
 
@@ -134,13 +141,18 @@ public class StockService {
                         item.getProfile().getAddress());
             }
         }
-        return StockMapper.toResponse(pantryItemRepository.save(item));
+        PantryItem saved = pantryItemRepository.save(item);
+        activityRecordService.record(profileId, "stock_item_updated",
+                "Atualizou o estoque de " + item.getFood().getName());
+        return StockMapper.toResponse(saved);
     }
 
     @Transactional
     public void remove(Integer profileId, Integer itemId) {
         PantryItem item = findOwnedItem(profileId, itemId);
         pantryItemRepository.delete(item);
+        activityRecordService.record(profileId, "stock_item_removed",
+                "Removeu " + item.getFood().getName() + " do estoque");
     }
 
     @Transactional
@@ -153,6 +165,8 @@ public class StockService {
                         profileRepository.getReferenceById(profileId), request.minimumQuantity()));
         setting.setMinimumQuantity(request.minimumQuantity());
         PantryProductSetting saved = settingRepository.save(setting);
+        activityRecordService.record(profileId, "minimum_stock_quantity_changed",
+                "Definiu o estoque mínimo de " + food.getName() + " para " + request.minimumQuantity());
         return StockMapper.toResponse(saved);
     }
 
