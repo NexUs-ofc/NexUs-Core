@@ -11,6 +11,7 @@ import com.example.nexuscore.mapper.StoreMapper;
 import com.example.nexuscore.model.Address;
 import com.example.nexuscore.model.Company;
 import com.example.nexuscore.model.Profile;
+import com.example.nexuscore.model.ProfileStatus;
 import com.example.nexuscore.model.ProfileType;
 import com.example.nexuscore.model.Store;
 import com.example.nexuscore.repository.AddressRepository;
@@ -43,17 +44,20 @@ public class StoreService {
     }
 
     public StoreResponse get(Integer id) {
-        return StoreMapper.toResponse(repository.findById(id)
+        return StoreMapper.toResponse(repository.findByIdForActiveProfiles(
+                        id, ProfileStatus.ACTIVE, ProfileStatus.ACTIVE)
                 .orElseThrow(() -> new NotFoundException("Loja nao encontrada: " + id)));
     }
 
     public List<StoreResponse> list() {
-        return repository.findAll().stream().map(StoreMapper::toResponse).toList();
+        return repository.findAllForActiveProfiles(
+                        ProfileStatus.ACTIVE, ProfileStatus.ACTIVE).stream()
+                .map(StoreMapper::toResponse).toList();
     }
 
     public List<StoreResponse> nearby(Integer profileId, Double latitude, Double longitude, Double radiusKm) {
         GeoPoint point = resolveNearbyPoint(profileId, latitude, longitude);
-        double radius = radiusKm != null ? radiusKm : 10.0;
+        double radius = radiusKm != null ? radiusKm : 5.0;
         if (radius <= 0 || radius > 100) {
             throw new IllegalArgumentException("Raio deve ser maior que zero e menor ou igual a 100 km");
         }
@@ -92,12 +96,16 @@ public class StoreService {
                 request.phones() == null ? new LinkedHashSet<>() : new LinkedHashSet<>(request.phones())));
 
         Store store = new Store(request.cnpj(), company, storeProfile);
+        store.setBusinessHours(request.openingTime(), request.closingTime());
         return StoreMapper.toResponse(repository.save(store));
     }
 
     @Transactional
     public StoreResponse updateCompanyStore(Integer profileId, Integer id, StoreUpdateRequest request) {
         Store store = findOwned(profileId, id);
+        if (request.openingTime() != null || request.closingTime() != null) {
+            store.setBusinessHours(request.openingTime(), request.closingTime());
+        }
         if (request.cnpj() != null) {
             if (repository.existsByCnpjAndIdNot(request.cnpj(), store.getId())) {
                 throw new IllegalArgumentException("CNPJ ja cadastrado");

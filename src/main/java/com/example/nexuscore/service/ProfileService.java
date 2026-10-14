@@ -15,6 +15,7 @@ import com.example.nexuscore.repository.ProfileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -23,20 +24,25 @@ public class ProfileService {
     private final ProfileRepository repository;
     private final AddressRepository addressRepository;
     private final GeocodingService geocodingService;
+    private final ProfileRestrictionsCache restrictionsCache;
 
     public ProfileService(ProfileRepository repository, AddressRepository addressRepository,
-                          GeocodingService geocodingService) {
+                          GeocodingService geocodingService, ProfileRestrictionsCache restrictionsCache) {
         this.repository = repository;
         this.addressRepository = addressRepository;
         this.geocodingService = geocodingService;
+        this.restrictionsCache = restrictionsCache;
     }
 
     public ProfileResponse get(Integer profileId) {
-        return ProfileMapper.toResponse(findProfile(profileId));
+        List<String> restrictions = restrictionsCache.get(profileId,
+                () -> findProfile(profileId).getDietaryRestrictions());
+        Profile profile = findProfile(profileId);
+        return ProfileMapper.toResponse(profile, restrictions);
     }
 
     @Transactional
-    public ProfileResponse update(Integer profileId, ProfileRequest  request) {
+    public ProfileResponse update(Integer profileId, ProfileRequest request) {
         Profile profile = findProfile(profileId);
         if (request.name() != null) {
             profile.setName(request.name());
@@ -50,10 +56,22 @@ public class ProfileService {
         if (request.address() != null) {
             profile.setAddress(saveAddress(profile.getAddress(), request.address()));
         }
-
         validateRequiredAddress(profile);
 
-        return ProfileMapper.toResponse(profile);
+        if (request.dietaryRestrictions() != null) {
+            profile.setDietaryRestrictions(normalizeRestrictions(request.dietaryRestrictions()));
+            restrictionsCache.invalidateAfterCommit(profileId);
+        }
+
+        return ProfileMapper.toResponse(profile, profile.getDietaryRestrictions());
+    }
+
+    private List<String> normalizeRestrictions(List<String> restrictions) {
+        List<String> normalized = restrictions.stream().map(String::trim).toList();
+        if (normalized.stream().distinct().count() != normalized.size()) {
+            throw new IllegalArgumentException("Restrições alimentares duplicadas");
+        }
+        return normalized;
     }
 
     private void validateRequiredAddress(Profile profile) {

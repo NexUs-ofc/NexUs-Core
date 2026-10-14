@@ -19,6 +19,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -59,6 +60,10 @@ public class Profile {
     @CollectionTable(name = "profile_phone", joinColumns = @JoinColumn(name = "profile_id"))
     @ElementCollection
     private Set<String> phones = new LinkedHashSet<>();
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "dietary_restrictions", nullable = false, columnDefinition = "text[]")
+    private String[] dietaryRestrictions = new String[0];
 
     protected Profile() {
     }
@@ -109,6 +114,14 @@ public class Profile {
 
     public Set<String> getPhones() {
         return phones;
+    }
+
+    public List<String> getDietaryRestrictions() {
+        return List.of(dietaryRestrictions);
+    }
+
+    public void setDietaryRestrictions(List<String> dietaryRestrictions) {
+        this.dietaryRestrictions = dietaryRestrictions.toArray(String[]::new);
     }
 
     public void setName(String name) {

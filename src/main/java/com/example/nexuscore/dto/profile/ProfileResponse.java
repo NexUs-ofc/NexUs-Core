@@ -14,5 +14,6 @@ public record ProfileResponse(
         String profileImageUrl,
         LocalDateTime createdAt,
         List<String> phones,
-        AddressResponse address
+        AddressResponse address,
+        List<String> dietaryRestrictions
 ) {}

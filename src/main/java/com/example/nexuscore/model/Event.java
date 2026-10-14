@@ -2,6 +2,8 @@ package com.example.nexuscore.model;
 
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import java.time.LocalDateTime;
@@ -9,6 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "events")
+@CompoundIndexes({
+    @CompoundIndex(name = "idx_events_household_date", def = "{'household_id': 1, 'date': 1}"),
+    @CompoundIndex(name = "idx_events_date_id", def = "{'date': 1, '_id': 1}")
+})
 public class Event {
 
     @Id

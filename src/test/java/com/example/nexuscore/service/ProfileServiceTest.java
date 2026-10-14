@@ -25,7 +25,8 @@ class ProfileServiceTest {
         ProfileRepository profiles = mock(ProfileRepository.class);
         AddressRepository addresses = mock(AddressRepository.class);
         GeocodingService geocoding = mock(GeocodingService.class);
-        ProfileService service = new ProfileService(profiles, addresses, geocoding);
+        ProfileService service = new ProfileService(profiles, addresses, geocoding,
+                mock(ProfileRestrictionsCache.class));
         Address address = new Address("Centro", "Rua A", "10", "01001000", "Sao Paulo", "SP",
                 new BigDecimal("-23.550520"), new BigDecimal("-46.633308"));
         Profile profile = new Profile(address, "user@example.com", "User", null, ProfileType.HOUSEHOLD, Set.of());
@@ -33,7 +34,7 @@ class ProfileServiceTest {
         when(addresses.save(address)).thenReturn(address);
 
         service.update(12, new ProfileRequest(null, null, null,
-                new AddressRequest("Centro", "Rua A", "10", "01002000", "Sao Paulo", "SP")));
+                new AddressRequest("Centro", "Rua A", "10", "01002000", "Sao Paulo", "SP"), null));
 
         assertEquals("01002000", address.getCep());
         assertEquals(new BigDecimal("-23.550520"), address.getLatitude());
