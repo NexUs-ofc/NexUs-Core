@@ -11,11 +11,13 @@ import com.example.nexuscore.dto.notification.NotificationCandidatePage;
 import com.example.nexuscore.dto.notification.ProductNotificationCandidate;
 import com.example.nexuscore.security.NotifyTokenFilter;
 import com.example.nexuscore.service.NotificationCandidateService;
+import jakarta.servlet.DispatcherType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -31,6 +33,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -113,6 +116,45 @@ class NotificationCandidateControllerTest {
                 .andExpect(jsonPath("$.hasNext").value(false));
 
         verify(service).events(FROM, TO, 0, 100);
+    }
+
+    @Test
+    void returnsInternalServerErrorForMongoFailuresWithAValidNotifyToken() throws Exception {
+        when(service.events(FROM, TO, 0, 100)).thenThrow(
+                new InvalidMongoDbApiUsageException("you can't add a second 'date' expression"));
+
+        mockMvc.perform(get(EVENTS).header(NotifyTokenFilter.HEADER_NAME, TOKEN)
+                        .param("from", FROM.toString()).param("to", TO.toString()))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.error").value("Internal Server Error"))
+                .andExpect(jsonPath("$.message").value("Erro interno ao acessar os dados"));
+
+        verify(service).events(FROM, TO, 0, 100);
+        verifyNoInteractions(jwtDecoder);
+    }
+
+    @Test
+    void permitsInternalErrorDispatchWithoutReauthenticating() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/error");
+        request.setServletPath("/error");
+        request.setDispatcherType(DispatcherType.ERROR);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        response.setStatus(500);
+        MockFilterChain chain = new MockFilterChain();
+
+        context.getBean(FilterChainProxy.class).doFilter(request, response, chain);
+
+        assertNotNull(chain.getRequest());
+        assertEquals(500, response.getStatus());
+        verifyNoInteractions(service, jwtDecoder);
+    }
+
+    @Test
+    void keepsDirectErrorRequestsProtected() throws Exception {
+        mockMvc.perform(get("/error"))
+                .andExpect(status().isUnauthorized());
+        verifyNoInteractions(service, jwtDecoder);
     }
 
     @Test
