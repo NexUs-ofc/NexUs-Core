@@ -3,22 +3,27 @@ package com.example.nexuscore.mapper;
 import com.example.nexuscore.dto.recipe.RecipeIngredientResponse;
 import com.example.nexuscore.dto.recipe.RecipeResponse;
 import com.example.nexuscore.model.Recipe;
+import com.example.nexuscore.model.RecipeIngredient;
+import java.util.List;
+import java.util.Map;
 
 public final class RecipeMapper {
     private RecipeMapper() {
     }
 
-    public static RecipeResponse toResponse(Recipe recipe) {
+    public static RecipeResponse toResponse(Recipe recipe, Map<Integer, String> foodNames) {
         return new RecipeResponse(
                 recipe.getId().toHexString(),
                 recipe.getTitle(),
                 recipe.getServingSize(),
-                recipe.getIngredients().stream()
+                (recipe.getIngredients() == null ? List.<RecipeIngredient>of()
+                        : recipe.getIngredients()).stream()
                         .map(ingredient -> new RecipeIngredientResponse(
                                 ingredient.getFoodId(),
                                 ingredient.getRequiredQuantity(),
                                 ingredient.getMandatory(),
-                                ingredient.getPossibleSubstitutes()))
+                                ingredient.getPossibleSubstitutes(),
+                                ingredient.getFoodId() == null ? null : foodNames.get(ingredient.getFoodId())))
                         .toList(),
                 recipe.getInstructions(),
                 recipe.getCreatedBy());
