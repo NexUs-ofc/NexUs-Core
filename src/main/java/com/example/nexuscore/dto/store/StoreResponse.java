@@ -8,6 +8,7 @@ public record StoreResponse(
         Integer id,
         String name,
         String cnpj,
+        String storeImageUrl,
         String street,
         String number,
         String neighborhood,

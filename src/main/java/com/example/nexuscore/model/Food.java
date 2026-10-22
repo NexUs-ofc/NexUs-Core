@@ -33,6 +33,9 @@ public class Food {
     @Column(name = "product_brand", length = 100)
     private String productBrand;
 
+    @Column(name = "food_image_url", length = 500)
+    private String foodImageUrl;
+
     @Column(name = "package_quantity", nullable = false, precision = 10, scale = 2)
     private BigDecimal packageQuantity;
 
@@ -48,13 +51,14 @@ public class Food {
     }
 
     public Food(String name, Category category, String productBrand, BigDecimal packageQuantity,
-                UnitOfMeasure unitOfMeasure, String gtin) {
+                UnitOfMeasure unitOfMeasure, String gtin, String foodImageUrl) {
         this.name = name;
         this.category = category;
         this.productBrand = productBrand;
         this.packageQuantity = packageQuantity;
         this.unitOfMeasure = unitOfMeasure;
         this.gtin = gtin;
+        this.foodImageUrl = foodImageUrl;
     }
 
     public Integer getId() {
@@ -71,6 +75,14 @@ public class Food {
 
     public String getProductBrand() {
         return productBrand;
+    }
+
+    public String getFoodImageUrl() {
+        return foodImageUrl;
+    }
+
+    public void setFoodImageUrl(String foodImageUrl) {
+        this.foodImageUrl = foodImageUrl;
     }
 
     public BigDecimal getPackageQuantity() {

@@ -137,6 +137,7 @@ public interface StoreRepository extends JpaRepository<Store, Integer> {
                 select
                     s.id as id,
                     p.name as name,
+                    p.profile_image_url as "storeImageUrl",
                     s.cnpj as cnpj,
                     s.opening_time as openingTime,
                     s.closing_time as closingTime,

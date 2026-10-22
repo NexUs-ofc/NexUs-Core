@@ -1,0 +1,229 @@
+Project ceris_logical_model {
+  database_type: 'PostgreSQL'
+  Note: 'Modelo lógico do PostgreSQL e das coleções MongoDB. Referências entre esses dois bancos são mantidas pela aplicação e não são constraints do banco.'
+}
+
+Enum profile_type_enum {
+  HOUSEHOLD
+  ADMIN
+  COMPANY
+  STORE
+}
+
+Enum profile_status_enum {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+Enum unit_of_measure_enum {
+  g
+  kg
+  ml
+  l
+  unit
+}
+
+Enum payment_status_enum {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+Enum auth_provider_enum {
+  GOOGLE
+  PASSWORD
+}
+
+Enum notification_type_enum {
+  PRODUCT_EXPIRING
+  UPCOMING_EVENT
+}
+
+Table postgres.address {
+  id integer [pk, increment]
+  neighborhood varchar(100) [not null]
+  street varchar(150) [not null]
+  number varchar(10) [not null]
+  cep char(8) [not null]
+  city varchar(100) [not null]
+  state char(2) [not null]
+  latitude decimal(9,6)
+  longitude decimal(9,6)
+}
+
+Table postgres.category {
+  id integer [pk, increment]
+  category_name varchar(100) [not null, unique]
+}
+
+Table postgres.food {
+  id integer [pk, increment]
+  name varchar(150) [not null]
+  category_id integer [not null]
+  product_brand varchar(100)
+  package_quantity decimal(10,2) [not null]
+  unit_of_measure unit_of_measure_enum [not null]
+  gtin varchar(14) [unique]
+}
+
+Table postgres.profile {
+  id integer [pk, increment]
+  address_id integer
+  email varchar(255) [not null, unique]
+  name varchar(150) [not null]
+  created_at timestamp [not null]
+  type profile_type_enum [not null]
+  profile_image_url varchar(500)
+  status profile_status_enum [not null]
+  dietary_restrictions text[] [not null]
+  Note: 'address_id é obrigatório para os tipos HOUSEHOLD e STORE.'
+}
+
+Table postgres.profile_phone {
+  profile_id integer [not null]
+  phone varchar(16) [not null]
+
+  indexes {
+    (profile_id, phone) [pk]
+  }
+}
+
+Table postgres.auth_method {
+  id integer [pk, increment]
+  profile_id integer [not null]
+  provider auth_provider_enum [not null]
+  credential varchar(255) [not null]
+  created_at timestamp [not null]
+}
+
+Table postgres.pantry_item {
+  id integer [pk, increment]
+  food_id integer [not null]
+  profile_id integer [not null]
+  quantity integer [not null]
+  expiry_date date
+  created_at timestamp [not null]
+}
+
+Table postgres.pantry_product_setting {
+  id integer [pk, increment]
+  food_id integer [not null]
+  profile_id integer [not null]
+  minimum_quantity integer [not null]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  indexes {
+    (profile_id, food_id) [unique]
+  }
+}
+
+Table postgres.plan {
+  id integer [pk, increment]
+  plan_price decimal(10,2) [not null]
+  plan_name varchar(80) [not null, unique]
+  store_limit integer [not null]
+  description text
+  is_active boolean [not null]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table postgres.company {
+  id integer [pk, increment]
+  plan_id integer [not null]
+  cnpj char(14) [not null, unique]
+  profile_id integer [not null, unique]
+}
+
+Table postgres.store {
+  id integer [pk, increment]
+  cnpj char(14) [not null, unique]
+  company_id integer [not null]
+  profile_id integer [not null, unique]
+  opening_time time
+  closing_time time
+  Note: 'opening_time e closing_time são opcionais e, quando informados, devem aparecer juntos.'
+}
+
+Table postgres.payment {
+  id integer [pk, increment]
+  due_date date [not null]
+  billing_period_start date [not null]
+  billing_period_end date [not null]
+  payment_status payment_status_enum [not null]
+  company_id integer [not null]
+  plan_id integer [not null]
+  amount decimal(10,2) [not null]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+  paid_at timestamp
+}
+
+Table mongo.events {
+  _id objectId [pk]
+  household_id integer [not null, note: 'Referência lógica a postgres.profile.id']
+  title string
+  description string
+  date datetime
+  duration integer
+  local string
+  qtd_people integer
+  recipes json [note: 'Lista embutida com recipe_id, título e ingredientes usados no evento']
+}
+
+Table mongo.shopping_list {
+  _id string [pk]
+  household_id integer [note: 'Referência lógica a postgres.profile.id']
+  title string
+  event_id string [note: 'Referência lógica a mongo.events._id']
+  array_list json [note: 'Lista embutida de itens de compra']
+}
+
+Table mongo.recipes {
+  _id objectId [pk]
+  title string
+  serving_size integer
+  ingredients json [note: 'Lista embutida de ingredientes, quantidades, obrigatoriedade e substitutos']
+  instructions string
+  created_by string
+  account_id integer [note: 'Referência lógica a postgres.profile.id']
+  created_at datetime
+}
+
+Table mongo.records {
+  _id objectId [pk]
+  account_id integer [note: 'Referência lógica a postgres.profile.id']
+  event_type string
+  details string
+  date datetime
+}
+
+Table mongo.notifications {
+  _id objectId [pk]
+  profile_id integer [not null, note: 'Referência lógica a postgres.profile.id']
+  type notification_type_enum [not null]
+  source_id string [not null]
+  alert_key string [not null]
+  title string [not null]
+  message string [not null]
+  created_at datetime [not null]
+  read_at datetime
+}
+
+Ref: postgres.food.category_id > postgres.category.id
+Ref: postgres.profile.address_id > postgres.address.id
+Ref: postgres.profile_phone.profile_id > postgres.profile.id
+Ref: postgres.auth_method.profile_id > postgres.profile.id
+Ref: postgres.pantry_item.food_id > postgres.food.id
+Ref: postgres.pantry_item.profile_id > postgres.profile.id
+Ref: postgres.pantry_product_setting.food_id > postgres.food.id
+Ref: postgres.pantry_product_setting.profile_id > postgres.profile.id
+Ref: postgres.company.plan_id > postgres.plan.id
+Ref: postgres.company.profile_id > postgres.profile.id
+Ref: postgres.store.company_id > postgres.company.id
+Ref: postgres.store.profile_id > postgres.profile.id
+Ref: postgres.payment.company_id > postgres.company.id
+Ref: postgres.payment.plan_id > postgres.plan.id

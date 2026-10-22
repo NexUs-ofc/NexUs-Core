@@ -31,11 +31,13 @@ class StockServiceTest {
         PantryProductSetting setting = mock(PantryProductSetting.class);
         when(food.getId()).thenReturn(7);
         when(food.getName()).thenReturn("Arroz");
+        when(food.getFoodImageUrl()).thenReturn("https://example.com/arroz.jpg");
         when(setting.getFood()).thenReturn(food);
         when(setting.getMinimumQuantity()).thenReturn(2);
         when(settings.findMissingByProfileId(12)).thenReturn(List.of(setting));
 
-        assertEquals(List.of(new PantryProductSettingResponse(7, "Arroz", 2)), service.missing(12));
+        assertEquals(List.of(new PantryProductSettingResponse(7, "Arroz", "https://example.com/arroz.jpg", 2)),
+                service.missing(12));
         verify(settings).findMissingByProfileId(12);
         verifyNoInteractions(items);
     }
