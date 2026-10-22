@@ -36,19 +36,36 @@ management:
     health:
       probes:
         enabled: true
+    prometheus:
+      access: unrestricted
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,prometheus
   health:
     mongodb:
       enabled: false
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": true
+      minimum-expected-value:
+        "[http.server.requests]": 5ms
+      maximum-expected-value:
+        "[http.server.requests]": 30s
 
 server:
   port: ${PORT:8080}
   forward-headers-strategy: framework
 
 app:
+  admin:
+    key: ${ADMIN_API_KEY:${TRACING_ACESS:}}
+    metrics:
+      step-ms: ${ADMIN_METRICS_STEP_MS:60000}
+      retention-minutes: ${ADMIN_METRICS_RETENTION_MINUTES:720}
   scheduling:
     zone: ${BUSINESS_TIME_ZONE:America/Sao_Paulo}
   billing:
