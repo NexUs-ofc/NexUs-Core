@@ -80,7 +80,7 @@ public class ProductRankingService {
             Integer foodId = Integer.valueOf(score.getValue());
             Food food = foodsById.get(foodId);
             if (food != null) {
-                ranking.add(new ProductRankingEntry(position++, foodId, food.getName(),
+                ranking.add(new ProductRankingEntry(position++, foodId, food.getName(), food.getFoodImageUrl(),
                         score.getScore() == null ? 0 : score.getScore().longValue()));
             }
         }

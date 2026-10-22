@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -14,6 +15,7 @@ public record FoodRegistrationRequest(
         String gtin,
         @NotBlank String name,
         String productBrand,
+        @Size(max = 500) String foodImageUrl,
         @NotNull @Positive BigDecimal packageQuantity,
         @NotNull UnitOfMeasure unitOfMeasure,
         String gpcCode,

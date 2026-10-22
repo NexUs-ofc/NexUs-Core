@@ -7,6 +7,7 @@ public interface StoreDistanceProjection {
     Integer getId();
     String getName();
     String getCnpj();
+    String getStoreImageUrl();
     String getStreet();
     String getNumber();
     String getNeighborhood();
