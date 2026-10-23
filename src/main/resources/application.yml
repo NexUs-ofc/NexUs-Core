@@ -5,6 +5,10 @@ spring:
       - optional:file:src/main/resources/.env.properties
   application:
     name: NexUs-Core
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -49,6 +53,10 @@ server:
   forward-headers-strategy: framework
 
 app:
+  cloudinary:
+    cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+    api-key: ${CLOUDINARY_API_KEY:}
+    api-secret: ${CLOUDINARY_API_SECRET:}
   scheduling:
     zone: ${BUSINESS_TIME_ZONE:America/Sao_Paulo}
   billing:
