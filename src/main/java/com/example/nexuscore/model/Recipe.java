@@ -21,6 +21,11 @@ public class Recipe {
     @Field("serving_size")
     private Integer servingSize;
 
+    @Field("estimated_time")
+    private String estimatedTime;
+
+    private String difficulty;
+
     private List<RecipeIngredient> ingredients = new ArrayList<>();
 
     private String instructions;
@@ -47,6 +52,14 @@ public class Recipe {
 
     public Integer getServingSize() {
         return servingSize;
+    }
+
+    public String getEstimatedTime() {
+        return estimatedTime;
+    }
+
+    public String getDifficulty() {
+        return difficulty;
     }
 
     public List<RecipeIngredient> getIngredients() {

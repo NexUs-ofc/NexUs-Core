@@ -16,6 +16,8 @@ public final class RecipeMapper {
                 recipe.getId().toHexString(),
                 recipe.getTitle(),
                 recipe.getServingSize(),
+                recipe.getEstimatedTime(),
+                recipe.getDifficulty(),
                 (recipe.getIngredients() == null ? List.<RecipeIngredient>of()
                         : recipe.getIngredients()).stream()
                         .map(ingredient -> new RecipeIngredientResponse(

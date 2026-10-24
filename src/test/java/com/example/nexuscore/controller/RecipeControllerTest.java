@@ -74,6 +74,9 @@ class RecipeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(ID))
                 .andExpect(jsonPath("$[0].title").value("Frango ao molho"))
+                .andExpect(jsonPath("$[0].servingSize").value(4))
+                .andExpect(jsonPath("$[0].estimatedTime").value("30 minutos"))
+                .andExpect(jsonPath("$[0].difficulty").value("Fácil"))
                 .andExpect(jsonPath("$[0].ingredients[0].foodName").value("Peito de frango"));
 
         verify(service).listSaved(12);
@@ -88,6 +91,8 @@ class RecipeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(ID))
                 .andExpect(jsonPath("$.servingSize").value(4))
+                .andExpect(jsonPath("$.estimatedTime").value("30 minutos"))
+                .andExpect(jsonPath("$.difficulty").value("Fácil"))
                 .andExpect(jsonPath("$.ingredients[0].foodId").value(5))
                 .andExpect(jsonPath("$.ingredients[0].foodName").value("Peito de frango"))
                 .andExpect(jsonPath("$.ingredients[0].requiredQuantity").value("500g"))
@@ -97,6 +102,23 @@ class RecipeControllerTest {
                 .andExpect(jsonPath("$.createdBy").value("Cerita"));
 
         verify(service).getSaved(12, ID);
+    }
+
+    @Test
+    void returnsRecipesWithoutOptionalMetadata() throws Exception {
+        RecipeResponse legacy = new RecipeResponse(ID, "Arroz", 4, null, null, List.of(), "Cozinhe.", "ai");
+        when(service.listSaved(12)).thenReturn(List.of(legacy));
+        when(service.getSaved(12, ID)).thenReturn(legacy);
+
+        mockMvc.perform(get(RECIPES).header("Authorization", "Bearer profile-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].servingSize").value(4))
+                .andExpect(jsonPath("$[0].estimatedTime").doesNotExist())
+                .andExpect(jsonPath("$[0].difficulty").doesNotExist());
+        mockMvc.perform(get(RECIPES + "/" + ID).header("Authorization", "Bearer profile-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estimatedTime").doesNotExist())
+                .andExpect(jsonPath("$.difficulty").doesNotExist());
     }
 
     @Test
@@ -126,7 +148,7 @@ class RecipeControllerTest {
     }
 
     private RecipeResponse recipe() {
-        return new RecipeResponse(ID, "Frango ao molho", 4,
+        return new RecipeResponse(ID, "Frango ao molho", 4, "30 minutos", "Fácil",
                 List.of(new RecipeIngredientResponse(5, "500g", true, List.of(7), "Peito de frango")),
                 "Corte o frango.\nCozinhe por 15 minutos.", "Cerita");
     }
