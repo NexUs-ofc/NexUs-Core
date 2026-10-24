@@ -1,5 +1,6 @@
 package com.example.nexuscore.dto.recipe;
 
+import com.example.nexuscore.model.RecipeDifficulty;
 import java.util.List;
 
 public record RecipeResponse(
@@ -7,7 +8,7 @@ public record RecipeResponse(
         String title,
         Integer servingSize,
         String estimatedTime,
-        String difficulty,
+        RecipeDifficulty difficulty,
         List<RecipeIngredientResponse> ingredients,
         String instructions,
         String createdBy

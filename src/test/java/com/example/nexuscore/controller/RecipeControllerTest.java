@@ -5,10 +5,13 @@ import com.example.nexuscore.config.SecurityConfig;
 import com.example.nexuscore.dto.recipe.RecipeIngredientResponse;
 import com.example.nexuscore.dto.recipe.RecipeResponse;
 import com.example.nexuscore.exception.NotFoundException;
+import com.example.nexuscore.model.RecipeDifficulty;
 import com.example.nexuscore.service.RecipeService;
 import com.example.nexuscore.util.CurrentProfileResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -76,7 +79,7 @@ class RecipeControllerTest {
                 .andExpect(jsonPath("$[0].title").value("Frango ao molho"))
                 .andExpect(jsonPath("$[0].servingSize").value(4))
                 .andExpect(jsonPath("$[0].estimatedTime").value("30 minutos"))
-                .andExpect(jsonPath("$[0].difficulty").value("Fácil"))
+                .andExpect(jsonPath("$[0].difficulty").value("EASY"))
                 .andExpect(jsonPath("$[0].ingredients[0].foodName").value("Peito de frango"));
 
         verify(service).listSaved(12);
@@ -92,7 +95,7 @@ class RecipeControllerTest {
                 .andExpect(jsonPath("$.id").value(ID))
                 .andExpect(jsonPath("$.servingSize").value(4))
                 .andExpect(jsonPath("$.estimatedTime").value("30 minutos"))
-                .andExpect(jsonPath("$.difficulty").value("Fácil"))
+                .andExpect(jsonPath("$.difficulty").value("EASY"))
                 .andExpect(jsonPath("$.ingredients[0].foodId").value(5))
                 .andExpect(jsonPath("$.ingredients[0].foodName").value("Peito de frango"))
                 .andExpect(jsonPath("$.ingredients[0].requiredQuantity").value("500g"))
@@ -119,6 +122,21 @@ class RecipeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estimatedTime").doesNotExist())
                 .andExpect(jsonPath("$.difficulty").doesNotExist());
+    }
+
+    @ParameterizedTest
+    @EnumSource(RecipeDifficulty.class)
+    void exposesCanonicalDifficultyValuesInListAndDetails(RecipeDifficulty difficulty) throws Exception {
+        RecipeResponse response = recipe(difficulty);
+        when(service.listSaved(12)).thenReturn(List.of(response));
+        when(service.getSaved(12, ID)).thenReturn(response);
+
+        mockMvc.perform(get(RECIPES).header("Authorization", "Bearer profile-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].difficulty").value(difficulty.name()));
+        mockMvc.perform(get(RECIPES + "/" + ID).header("Authorization", "Bearer profile-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.difficulty").value(difficulty.name()));
     }
 
     @Test
@@ -148,7 +166,11 @@ class RecipeControllerTest {
     }
 
     private RecipeResponse recipe() {
-        return new RecipeResponse(ID, "Frango ao molho", 4, "30 minutos", "Fácil",
+        return recipe(RecipeDifficulty.EASY);
+    }
+
+    private RecipeResponse recipe(RecipeDifficulty difficulty) {
+        return new RecipeResponse(ID, "Frango ao molho", 4, "30 minutos", difficulty,
                 List.of(new RecipeIngredientResponse(5, "500g", true, List.of(7), "Peito de frango")),
                 "Corte o frango.\nCozinhe por 15 minutos.", "Cerita");
     }

@@ -6,6 +6,7 @@ import com.example.nexuscore.exception.NotFoundException;
 import com.example.nexuscore.model.Food;
 import com.example.nexuscore.model.Recipe;
 import com.example.nexuscore.model.RecipeAccount;
+import com.example.nexuscore.model.RecipeDifficulty;
 import com.example.nexuscore.model.RecipeIngredient;
 import com.example.nexuscore.repository.FoodRepository;
 import com.example.nexuscore.repository.RecipeAccountRepository;
@@ -70,7 +71,7 @@ class RecipeServiceTest {
     void loadsTheSavedRecipeWithItsIngredientsAndInstructions() {
         Recipe recipe = recipe(ID, "Frango ao molho", List.of(ingredient(5, "500g")));
         when(recipe.getEstimatedTime()).thenReturn("30 minutos");
-        when(recipe.getDifficulty()).thenReturn("Fácil");
+        when(recipe.getDifficulty()).thenReturn(RecipeDifficulty.EASY);
         when(recipes.findByIdAndAccountId(ID, 12)).thenReturn(Optional.of(recipe));
         Food chicken = food(5, "Peito de frango");
         when(foods.findAllById(List.of(5))).thenReturn(List.of(chicken));
@@ -81,7 +82,7 @@ class RecipeServiceTest {
         assertEquals("Frango ao molho", result.title());
         assertEquals(4, result.servingSize());
         assertEquals("30 minutos", result.estimatedTime());
-        assertEquals("Fácil", result.difficulty());
+        assertEquals(RecipeDifficulty.EASY, result.difficulty());
         assertEquals("Corte o frango.\nCozinhe por 15 minutos.", result.instructions());
         assertEquals("Cerita", result.createdBy());
         assertEquals(new RecipeIngredientResponse(5, "500g", true, List.of(7), "Peito de frango"),
@@ -164,7 +165,7 @@ class RecipeServiceTest {
         Recipe linked = recipe(secondId, "Frango", List.of());
         when(linked.getCreatedAt()).thenReturn(newest.minusSeconds(120));
         when(linked.getEstimatedTime()).thenReturn("40 minutos");
-        when(linked.getDifficulty()).thenReturn("Média");
+        when(linked.getDifficulty()).thenReturn(RecipeDifficulty.MEDIUM);
         Recipe tied = recipe(thirdId, "Bolo", List.of());
         List<RecipeAccount> links = List.of(saved(secondId, newest.minusSeconds(180)),
                 saved(thirdId, newest), saved(secondId, newest), saved(null, newest));
@@ -177,7 +178,7 @@ class RecipeServiceTest {
         assertEquals(List.of(thirdId.toHexString(), secondId.toHexString(), ID.toHexString()),
                 result.stream().map(RecipeResponse::id).toList());
         assertEquals("40 minutos", result.get(1).estimatedTime());
-        assertEquals("Média", result.get(1).difficulty());
+        assertEquals(RecipeDifficulty.MEDIUM, result.get(1).difficulty());
         verify(recipeAccounts).findByAccountId(12);
         verifyNoInteractions(foods, activities);
     }

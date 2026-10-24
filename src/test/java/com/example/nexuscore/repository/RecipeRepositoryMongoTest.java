@@ -4,6 +4,7 @@ import com.example.nexuscore.dto.recipe.RecipeResponse;
 import com.example.nexuscore.exception.NotFoundException;
 import com.example.nexuscore.model.Food;
 import com.example.nexuscore.model.Recipe;
+import com.example.nexuscore.model.RecipeDifficulty;
 import com.example.nexuscore.service.ActivityRecordService;
 import com.example.nexuscore.service.RecipeService;
 import com.mongodb.client.MongoClient;
@@ -15,6 +16,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory;
 import java.time.Instant;
@@ -82,7 +85,7 @@ class RecipeRepositoryMongoTest {
         assertThat(service.listSaved(12)).containsExactly(details);
         assertThat(details.servingSize()).isEqualTo(4);
         assertThat(details.estimatedTime()).isEqualTo("30 minutos");
-        assertThat(details.difficulty()).isEqualTo("Fácil");
+        assertThat(details.difficulty()).isEqualTo(RecipeDifficulty.EASY);
         assertThat(details.ingredients().get(0).foodName()).isEqualTo("Arroz branco tipo 1");
         assertThat(details.ingredients().get(0).requiredQuantity()).isEqualTo("200g");
         assertThat(details.instructions()).isEqualTo("Lave o arroz.\nCozinhe até ficar macio.");
@@ -99,6 +102,58 @@ class RecipeRepositoryMongoTest {
         assertThat(details.servingSize()).isEqualTo(4);
         assertThat(details.estimatedTime()).isNull();
         assertThat(details.difficulty()).isNull();
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "EASY, EASY",
+        "MEDIUM, MEDIUM",
+        "HARD, HARD",
+        "easy, EASY",
+        "Fácil, EASY",
+        "facil, EASY",
+        "'  fÁcIl  ', EASY",
+        "Média, MEDIUM",
+        "media, MEDIUM",
+        "Médio, MEDIUM",
+        "medio, MEDIUM",
+        "Difícil, HARD",
+        "dificil, HARD"
+    })
+    void readsLegacyDifficultyAndWritesCanonicalValues(String stored, RecipeDifficulty expected) {
+        Document document = recipe(1).append("account_id", 12).append("difficulty", stored);
+        insert(document);
+        ObjectId id = document.getObjectId("_id");
+
+        RecipeResponse details = service.getSaved(12, id.toHexString());
+
+        assertThat(details.difficulty()).isEqualTo(expected);
+        assertThat(service.listSaved(12)).containsExactly(details);
+        recipes.save(recipes.findById(id).orElseThrow());
+        assertThat(template.getCollection("recipes").find(new Document("_id", id)).first())
+                .containsEntry("difficulty", expected.name());
+        assertThat(service.getSaved(12, id.toHexString()).difficulty()).isEqualTo(expected);
+    }
+
+    @Test
+    void keepsExplicitlyNullDifficultyOptional() {
+        Document document = recipe(1).append("account_id", 12).append("difficulty", null);
+        insert(document);
+        ObjectId id = document.getObjectId("_id");
+
+        assertThat(service.getSaved(12, id.toHexString()).difficulty()).isNull();
+        recipes.save(recipes.findById(id).orElseThrow());
+        assertThat(service.getSaved(12, id.toHexString()).difficulty()).isNull();
+    }
+
+    @Test
+    void rejectsUnsupportedStoredDifficulty() {
+        Document document = recipe(1).append("difficulty", "UNKNOWN");
+        insert(document);
+
+        assertThatThrownBy(() -> recipes.findById(document.getObjectId("_id")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Dificuldade de receita invalida: UNKNOWN");
     }
 
     @Test
