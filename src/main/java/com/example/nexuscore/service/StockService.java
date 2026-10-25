@@ -166,7 +166,7 @@ public class StockService {
         }
         if (request.expiryDate() != null) {
             item.setExpiryDate(request.expiryDate());
-            if (request.expiryDate().isBefore(LocalDate.now())) {
+            if (item.getQuantity() > 0 && request.expiryDate().isBefore(LocalDate.now())) {
                 rankingService.recordExpired(item.getId(), item.getFood().getId(),
                         item.getProfile().getAddress());
             }
@@ -180,7 +180,8 @@ public class StockService {
     @Transactional
     public void remove(Integer profileId, Integer itemId) {
         PantryItem item = findOwnedItem(profileId, itemId);
-        pantryItemRepository.delete(item);
+        item.setQuantity(0);
+        pantryItemRepository.save(item);
         activityRecordService.record(profileId, "stock_item_removed",
                 "Removeu " + item.getFood().getName() + " do estoque");
     }
@@ -201,7 +202,7 @@ public class StockService {
     }
 
     private PantryItem findOwnedItem(Integer profileId, Integer itemId) {
-        PantryItem item = pantryItemRepository.findById(itemId)
+        PantryItem item = pantryItemRepository.findByIdForUpdate(itemId)
                 .orElseThrow(() -> new NotFoundException("Item de estoque nao encontrado: " + itemId));
         if (!item.getProfile().getId().equals(profileId)) {
             throw new ForbiddenException("Item de estoque nao pertence ao perfil autenticado");

@@ -1,9 +1,9 @@
 package com.example.nexuscore.dto.stock;
 
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDate;
 
 public record StockItemUpdateRequest(
-        @Positive Integer quantity,
+        @PositiveOrZero Integer quantity,
         LocalDate expiryDate
 ) {}
