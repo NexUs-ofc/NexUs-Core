@@ -16,8 +16,7 @@ WITH [
   {name: 'PantryItem', source: 'PostgreSQL.pantry_item', key: 'id', description: 'Produto e quantidade existentes no estoque de um perfil.'},
   {name: 'PantryProductSetting', source: 'PostgreSQL.pantry_product_setting', key: 'id', description: 'Configuracao de quantidade minima de um produto no estoque.'},
   {name: 'Recipe', source: 'MongoDB.recipes', key: '_id', description: 'Receita salva e associada diretamente a um perfil por account_id.'},
-  {name: 'Event', source: 'MongoDB.events', key: '_id', description: 'Evento da casa, com data e receitas incorporadas.'},
-  {name: 'ShoppingList', source: 'MongoDB.shopping_list', key: '_id', description: 'Lista de compras da casa, opcionalmente associada a um evento.'},
+  {name: 'ShoppingList', source: 'MongoDB.shopping_list', key: '_id', description: 'Lista de compras da casa, com data opcional.'},
   {name: 'Record', source: 'MongoDB.records', key: '_id', description: 'Atividade recente do perfil.'},
   {name: 'Notification', source: 'MongoDB.notifications', key: '_id', description: 'Notificacao direcionada a um perfil.'}
 ] AS entities
@@ -44,10 +43,7 @@ WITH [
   {from: 'PantryProductSetting', to: 'Food', name: 'FOR_PRODUCT', source: 'pantry_product_setting.food_id -> food.id'},
   {from: 'Profile', to: 'Recipe', name: 'SAVED', source: 'recipes.account_id -> profile.id'},
   {from: 'Recipe', to: 'Food', name: 'REQUIRES', source: 'recipes.ingredients[].food_id -> food.id'},
-  {from: 'Profile', to: 'Event', name: 'HAS_EVENT', source: 'events.household_id -> profile.id'},
-  {from: 'Event', to: 'Recipe', name: 'USES_RECIPE', source: 'events.recipes[].recipe_id -> recipes._id'},
   {from: 'Profile', to: 'ShoppingList', name: 'HAS_SHOPPING_LIST', source: 'shopping_list.household_id -> profile.id'},
-  {from: 'Event', to: 'ShoppingList', name: 'HAS_SHOPPING_LIST', source: 'shopping_list.event_id -> events._id'},
   {from: 'Profile', to: 'Record', name: 'HAS_RECORD', source: 'records.account_id -> profile.id'},
   {from: 'Profile', to: 'Notification', name: 'RECEIVES', source: 'notifications.profile_id -> profile.id'}
 ] AS relations

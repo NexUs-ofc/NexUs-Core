@@ -1,6 +1,5 @@
 package com.example.nexuscore.service;
 
-import com.example.nexuscore.dto.notification.EventNotificationCandidate;
 import com.example.nexuscore.dto.notification.NearbyHouseholdProjection;
 import com.example.nexuscore.dto.notification.NearbyStoreCandidate;
 import com.example.nexuscore.dto.notification.NearbyStoreOption;
@@ -9,10 +8,7 @@ import com.example.nexuscore.dto.notification.NewStoreCandidate;
 import com.example.nexuscore.dto.notification.NewStoreProjection;
 import com.example.nexuscore.dto.notification.NotificationCandidatePage;
 import com.example.nexuscore.dto.notification.ProductNotificationCandidate;
-import com.example.nexuscore.model.Event;
 import com.example.nexuscore.model.Profile;
-import com.example.nexuscore.model.ProfileStatus;
-import com.example.nexuscore.repository.EventRepository;
 import com.example.nexuscore.repository.PantryItemRepository;
 import com.example.nexuscore.repository.ProfileRepository;
 import com.example.nexuscore.repository.StoreRepository;
@@ -23,12 +19,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class NotificationCandidateService {
@@ -37,16 +30,13 @@ public class NotificationCandidateService {
     private static final long MAX_WINDOW_DAYS = 31;
 
     private final PantryItemRepository pantryItemRepository;
-    private final EventRepository eventRepository;
     private final ProfileRepository profileRepository;
     private final StoreRepository storeRepository;
 
     public NotificationCandidateService(PantryItemRepository pantryItemRepository,
-                                        EventRepository eventRepository,
                                         ProfileRepository profileRepository,
                                         StoreRepository storeRepository) {
         this.pantryItemRepository = pantryItemRepository;
-        this.eventRepository = eventRepository;
         this.profileRepository = profileRepository;
         this.storeRepository = storeRepository;
     }
@@ -59,27 +49,6 @@ public class NotificationCandidateService {
                 .map(item -> new ProductNotificationCandidate(
                         item.getProfileId(), item.getItemId(), item.getFoodName(), item.getExpiryDate()));
         return new NotificationCandidatePage<>(candidates.getContent(), candidates.hasNext());
-    }
-
-    public NotificationCandidatePage<EventNotificationCandidate> events(
-            LocalDate from, LocalDate to, int page, int size) {
-        validateRequest(from, to, page, size);
-        Slice<Event> events = eventRepository.findByDateGreaterThanEqualAndDateLessThanOrderByDateAscIdAsc(
-                from.atStartOfDay(), to.plusDays(1).atStartOfDay(), PageRequest.of(page, size));
-        Set<Integer> householdIds = events.getContent().stream()
-                .map(Event::getHouseholdId)
-                .collect(Collectors.toSet());
-        Set<Integer> activeProfileIds = householdIds.isEmpty()
-                ? Set.of()
-                : profileRepository.findByIdInAndStatus(householdIds, ProfileStatus.ACTIVE).stream()
-                        .map(Profile::getId)
-                        .collect(Collectors.toCollection(HashSet::new));
-        List<EventNotificationCandidate> content = events.getContent().stream()
-                .filter(event -> activeProfileIds.contains(event.getHouseholdId()))
-                .map(event -> new EventNotificationCandidate(
-                        event.getHouseholdId(), event.getId().toHexString(), event.getTitle(), event.getDate()))
-                .toList();
-        return new NotificationCandidatePage<>(content, events.hasNext());
     }
 
     public NotificationCandidatePage<NearbyStoreCandidate> nearbyStores(double radiusKm, int page, int size) {

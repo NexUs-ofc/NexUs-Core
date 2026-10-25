@@ -38,7 +38,10 @@ class SecurityConfigTest {
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.info.title").value("NexUs Core API"));
+                .andExpect(jsonPath("$.info.title").value("NexUs Core API"))
+                .andExpect(jsonPath("$.paths['/api/events']").doesNotExist())
+                .andExpect(jsonPath("$.paths['/api/events/{id}']").doesNotExist())
+                .andExpect(jsonPath("$.paths['/internal/notifications/events']").doesNotExist());
     }
 
     @Test

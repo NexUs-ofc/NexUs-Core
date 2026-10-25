@@ -1,6 +1,5 @@
 package com.example.nexuscore.controller;
 
-import com.example.nexuscore.dto.notification.EventNotificationCandidate;
 import com.example.nexuscore.dto.notification.NearbyStoreCandidate;
 import com.example.nexuscore.dto.notification.NewStoreCandidate;
 import com.example.nexuscore.dto.notification.NotificationCandidatePage;
@@ -30,15 +29,6 @@ public class NotificationCandidateController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "100") int size) {
         return service.products(from, to, page, size);
-    }
-
-    @GetMapping("/events")
-    public NotificationCandidatePage<EventNotificationCandidate> events(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "100") int size) {
-        return service.events(from, to, page, size);
     }
 
     @GetMapping("/nearby-stores")

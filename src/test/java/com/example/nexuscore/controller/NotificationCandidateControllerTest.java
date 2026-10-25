@@ -3,7 +3,6 @@ package com.example.nexuscore.controller;
 import com.example.nexuscore.config.CoreConfiguration;
 import com.example.nexuscore.config.NotificationIntegrationSecurityConfig;
 import com.example.nexuscore.config.SecurityConfig;
-import com.example.nexuscore.dto.notification.EventNotificationCandidate;
 import com.example.nexuscore.dto.notification.NearbyStoreCandidate;
 import com.example.nexuscore.dto.notification.NearbyStoreOption;
 import com.example.nexuscore.dto.notification.NewStoreCandidate;
@@ -17,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -29,7 +28,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -56,7 +54,6 @@ class NotificationCandidateControllerTest {
     private static final LocalDate FROM = LocalDate.of(2026, 10, 12);
     private static final LocalDate TO = LocalDate.of(2026, 10, 15);
     private static final String PRODUCTS = "/internal/notifications/products";
-    private static final String EVENTS = "/internal/notifications/events";
     private static final String NEARBY_STORES = "/internal/notifications/nearby-stores";
     private static final String NEW_STORES = "/internal/notifications/new-stores";
 
@@ -101,36 +98,18 @@ class NotificationCandidateControllerTest {
     }
 
     @Test
-    void returnsEventsUsingTheSameCandidatePageContract() throws Exception {
-        LocalDateTime date = TO.atTime(23, 59);
-        when(service.events(FROM, TO, 0, 100)).thenReturn(new NotificationCandidatePage<>(
-                List.of(new EventNotificationCandidate(19, "event-id", "Jantar", date)), false));
+    void returnsInternalServerErrorForDataAccessFailuresWithAValidNotifyToken() throws Exception {
+        when(service.products(FROM, TO, 0, 100)).thenThrow(
+                new DataAccessResourceFailureException("Data access failed"));
 
-        mockMvc.perform(get(EVENTS).header(NotifyTokenFilter.HEADER_NAME, TOKEN)
-                        .param("from", FROM.toString()).param("to", TO.toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].profileId").value(19))
-                .andExpect(jsonPath("$.content[0].eventId").value("event-id"))
-                .andExpect(jsonPath("$.content[0].title").value("Jantar"))
-                .andExpect(jsonPath("$.content[0].date").value("2026-10-15T23:59:00"))
-                .andExpect(jsonPath("$.hasNext").value(false));
-
-        verify(service).events(FROM, TO, 0, 100);
-    }
-
-    @Test
-    void returnsInternalServerErrorForMongoFailuresWithAValidNotifyToken() throws Exception {
-        when(service.events(FROM, TO, 0, 100)).thenThrow(
-                new InvalidMongoDbApiUsageException("you can't add a second 'date' expression"));
-
-        mockMvc.perform(get(EVENTS).header(NotifyTokenFilter.HEADER_NAME, TOKEN)
+        mockMvc.perform(get(PRODUCTS).header(NotifyTokenFilter.HEADER_NAME, TOKEN)
                         .param("from", FROM.toString()).param("to", TO.toString()))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.status").value(500))
                 .andExpect(jsonPath("$.error").value("Internal Server Error"))
                 .andExpect(jsonPath("$.message").value("Erro interno ao acessar os dados"));
 
-        verify(service).events(FROM, TO, 0, 100);
+        verify(service).products(FROM, TO, 0, 100);
         verifyNoInteractions(jwtDecoder);
     }
 
@@ -182,7 +161,7 @@ class NotificationCandidateControllerTest {
     void rejectsMissingAndInvalidServiceTokens() throws Exception {
         mockMvc.perform(get(PRODUCTS).param("from", FROM.toString()).param("to", TO.toString()))
                 .andExpect(status().isUnauthorized());
-        mockMvc.perform(get(EVENTS).header(NotifyTokenFilter.HEADER_NAME, "wrong-token")
+        mockMvc.perform(get(PRODUCTS).header(NotifyTokenFilter.HEADER_NAME, "wrong-token")
                         .param("from", FROM.toString()).param("to", TO.toString()))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(get(PRODUCTS).header("Authorization", "Bearer user-token")
@@ -217,9 +196,18 @@ class NotificationCandidateControllerTest {
 
     @Test
     void rejectsMalformedDatesBeforeCallingTheService() throws Exception {
-        mockMvc.perform(get(EVENTS).header(NotifyTokenFilter.HEADER_NAME, TOKEN)
+        mockMvc.perform(get(PRODUCTS).header(NotifyTokenFilter.HEADER_NAME, TOKEN)
                         .param("from", "invalid").param("to", TO.toString()))
                 .andExpect(status().isBadRequest());
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void rejectsRemovedEventNotificationRoute() throws Exception {
+        mockMvc.perform(get("/internal/notifications/events").header(NotifyTokenFilter.HEADER_NAME, TOKEN)
+                        .param("from", FROM.toString()).param("to", TO.toString()))
+                .andExpect(status().isForbidden());
+
         verifyNoInteractions(service);
     }
 }
