@@ -1,5 +1,6 @@
 package com.example.nexuscore;
 
+import com.example.nexuscore.geo.GeocodingProperties;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,9 @@ class NexUsCoreApplicationTests {
     @Autowired
     private HikariDataSource dataSource;
 
+    @Autowired
+    private GeocodingProperties geocodingProperties;
+
     @Test
     void contextLoads() {
     }
@@ -30,6 +34,11 @@ class NexUsCoreApplicationTests {
     @Test
     void limitsPostgresConnectionPoolSize() {
         assertEquals(5, dataSource.getMaximumPoolSize());
+    }
+
+    @Test
+    void loadsDistanceMatrixApiKeyFromConfiguration() {
+        assertEquals("test-geocoding-key", geocodingProperties.apiKey());
     }
 
 }

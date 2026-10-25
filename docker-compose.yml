@@ -18,7 +18,7 @@ services:
       # Lista de origens separadas por vírgulas (ex.: https://app.example.com,http://localhost:3000).
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
       JWT_ISSUER: ${JWT_ISSUER:-nexus-auth}
-      GEOCODING_USER_AGENT: ${GEOCODING_USER_AGENT:-NexUs-Core/1.0}
+      DISTANCEMATRIX_API_KEY: ${DISTANCEMATRIX_API_KEY}
     restart: unless-stopped
     depends_on:
       redis:

@@ -1,6 +1,6 @@
 package com.example.nexuscore.config;
 
-import com.example.nexuscore.geo.NominatimGeocodingService;
+import com.example.nexuscore.geo.GeocodingService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(properties = "CORS_ALLOWED_ORIGINS=https://frontend.example.com, http://localhost:3000")
 @AutoConfigureMockMvc
-@MockitoBean(types = NominatimGeocodingService.class)
+@MockitoBean(types = GeocodingService.class)
 class SecurityConfigTest {
 
     @Autowired
