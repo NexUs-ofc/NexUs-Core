@@ -14,6 +14,7 @@ import com.example.nexuscore.repository.AddressRepository;
 import com.example.nexuscore.repository.ProfileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -54,7 +55,7 @@ public class ProfileService {
             profile.setPhones(new LinkedHashSet<>(request.phones()));
         }
         if (request.address() != null) {
-            profile.setAddress(saveAddress(profile.getAddress(), request.address()));
+            profile.setAddress(saveAddress(profile, request.address()));
         }
         validateRequiredAddress(profile);
 
@@ -81,24 +82,34 @@ public class ProfileService {
         }
     }
 
-    private Address saveAddress(Address current, AddressRequest request) {
-        GeoPoint point = current != null
-                && current.hasSameLocation(request.street(), request.number(), request.neighborhood(),
-                        request.city(), request.state())
-                && current.getLatitude() != null && current.getLongitude() != null
-                ? new GeoPoint(current.getLatitude(), current.getLongitude())
-                : geocodingService.geocode(request.street(), request.number(), request.neighborhood(),
-                        request.city(), request.state())
-                        .orElseThrow(() -> new IllegalArgumentException("Nao foi possivel geocodificar o endereco"));
+    private Address saveAddress(Profile profile, AddressRequest request) {
+        Address current = profile.getAddress();
+        BigDecimal latitude = null;
+        BigDecimal longitude = null;
+        if (profile.getType() != ProfileType.COMPANY) {
+            GeoPoint point = resolveCoordinates(current, request);
+            latitude = point.latitude();
+            longitude = point.longitude();
+        }
         Address address = current != null ? current : new Address(
                 request.neighborhood(), request.street(), request.number(), request.cep(),
-                request.city(), request.state(), point.latitude(), point.longitude());
+                request.city(), request.state(), latitude, longitude);
         if (current != null) {
             address.update(
                     request.neighborhood(), request.street(), request.number(), request.cep(),
-                    request.city(), request.state(), point.latitude(), point.longitude());
+                    request.city(), request.state(), latitude, longitude);
         }
         return addressRepository.save(address);
+    }
+
+    private GeoPoint resolveCoordinates(Address current, AddressRequest request) {
+        if (current != null && current.hasSameLocation(request.street(), request.number(), request.neighborhood(),
+                request.city(), request.state()) && current.getLatitude() != null && current.getLongitude() != null) {
+            return new GeoPoint(current.getLatitude(), current.getLongitude());
+        }
+        return geocodingService.geocode(request.street(), request.number(), request.neighborhood(),
+                request.city(), request.state())
+                .orElseThrow(() -> new IllegalArgumentException("Nao foi possivel geocodificar o endereco"));
     }
 
     private Profile findProfile(Integer profileId) {

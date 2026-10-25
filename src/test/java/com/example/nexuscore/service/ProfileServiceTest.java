@@ -10,14 +10,20 @@ import com.example.nexuscore.model.ProfileType;
 import com.example.nexuscore.repository.AddressRepository;
 import com.example.nexuscore.repository.ProfileRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -45,10 +51,11 @@ class ProfileServiceTest {
         verifyNoInteractions(geocoding);
     }
 
-    @Test
-    void recalculatesAndPersistsCoordinatesWhenAddressChanges() {
+    @ParameterizedTest
+    @EnumSource(value = ProfileType.class, names = {"HOUSEHOLD", "STORE"})
+    void recalculatesAndPersistsCoordinatesWhenAddressChanges(ProfileType type) {
         Address address = currentAddress();
-        Profile profile = new Profile(address, "user@example.com", "User", null, ProfileType.HOUSEHOLD, Set.of());
+        Profile profile = new Profile(address, "user@example.com", "User", null, type, Set.of());
         when(profiles.findById(12)).thenReturn(Optional.of(profile));
         when(addresses.save(address)).thenReturn(address);
         when(geocoding.geocode("Estrada São Francisco", "10", "Jardim Henriqueta", "Taboão da Serra", "SP"))
@@ -75,6 +82,55 @@ class ProfileServiceTest {
         assertEquals("Rua A", address.getStreet());
         assertEquals(new BigDecimal("-23.550520"), address.getLatitude());
         verifyNoInteractions(addresses);
+    }
+
+    @Test
+    void createsCompanyAddressWithoutGeocodingOrCoordinates() {
+        Profile profile = new Profile(null, "company@example.com", "Empresa", null, ProfileType.COMPANY, Set.of());
+        when(profiles.findById(12)).thenReturn(Optional.of(profile));
+        when(addresses.save(any(Address.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.update(12, new ProfileRequest(null, null, null, changedAddress(), null));
+
+        ArgumentCaptor<Address> saved = ArgumentCaptor.forClass(Address.class);
+        verify(addresses).save(saved.capture());
+        assertEquals("Estrada São Francisco", saved.getValue().getStreet());
+        assertEquals("Taboão da Serra", saved.getValue().getCity());
+        assertNull(saved.getValue().getLatitude());
+        assertNull(saved.getValue().getLongitude());
+        verifyNoInteractions(geocoding);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void clearsCompanyCoordinatesWithoutGeocodingWhenSavingAddress(boolean locationChanged) {
+        Address address = currentAddress();
+        Profile profile = new Profile(address, "company@example.com", "Empresa", null, ProfileType.COMPANY, Set.of());
+        when(profiles.findById(12)).thenReturn(Optional.of(profile));
+        when(addresses.save(address)).thenReturn(address);
+        AddressRequest request = locationChanged ? changedAddress()
+                : new AddressRequest("Centro", "Rua A", "10", "01001000", "Sao Paulo", "SP");
+
+        service.update(12, new ProfileRequest(null, null, null, request, null));
+
+        verify(addresses).save(address);
+        assertEquals(request.street(), address.getStreet());
+        assertEquals(request.city(), address.getCity());
+        assertNull(address.getLatitude());
+        assertNull(address.getLongitude());
+        verifyNoInteractions(geocoding);
+    }
+
+    @Test
+    void keepsCompanyAddressOptionalWhenUpdatingOtherFields() {
+        Profile profile = new Profile(null, "company@example.com", "Empresa", null, ProfileType.COMPANY, Set.of());
+        when(profiles.findById(12)).thenReturn(Optional.of(profile));
+
+        service.update(12, new ProfileRequest("Nova empresa", null, null, null, null));
+
+        assertEquals("Nova empresa", profile.getName());
+        assertNull(profile.getAddress());
+        verifyNoInteractions(geocoding, addresses);
     }
 
     private Address currentAddress() {
