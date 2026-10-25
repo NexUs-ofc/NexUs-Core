@@ -1,12 +1,18 @@
 package com.example.nexuscore.service;
 
+import com.example.nexuscore.dto.store.StoreDistanceProjection;
 import com.example.nexuscore.geo.GeocodingService;
 import com.example.nexuscore.model.Address;
 import com.example.nexuscore.model.Profile;
+import com.example.nexuscore.model.ProfileStatus;
+import com.example.nexuscore.model.Store;
 import com.example.nexuscore.repository.AddressRepository;
 import com.example.nexuscore.repository.ProfileRepository;
 import com.example.nexuscore.repository.StoreRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +33,34 @@ class StoreServiceTest {
     private final GeocodingService geocodingService = mock(GeocodingService.class);
     private final StoreService service = new StoreService(
             repository, profileRepository, addressRepository, companyService, geocodingService);
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "https://example.com/store.jpg")
+    void includesProfileImageInStoreDetailsAndList(String imageUrl) {
+        Profile profile = mock(Profile.class);
+        Store store = mock(Store.class);
+        when(store.getProfile()).thenReturn(profile);
+        when(profile.getProfileImageUrl()).thenReturn(imageUrl);
+        when(repository.findByIdForActiveProfiles(1, ProfileStatus.ACTIVE, ProfileStatus.ACTIVE))
+                .thenReturn(Optional.of(store));
+        when(repository.findAllForActiveProfiles(ProfileStatus.ACTIVE, ProfileStatus.ACTIVE))
+                .thenReturn(List.of(store));
+
+        assertEquals(imageUrl, service.get(1).storeImageUrl());
+        assertEquals(imageUrl, service.list().get(0).storeImageUrl());
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "https://example.com/store.jpg")
+    void includesProfileImageInNearbyStores(String imageUrl) {
+        StoreDistanceProjection projection = mock(StoreDistanceProjection.class);
+        when(projection.getStoreImageUrl()).thenReturn(imageUrl);
+        when(repository.findNearby(-23.55052, -46.633308, 5.0)).thenReturn(List.of(projection));
+
+        assertEquals(imageUrl, service.nearby(12, -23.55052, -46.633308, 5.0).get(0).storeImageUrl());
+    }
 
     @Test
     void usesCoordinatesReceivedByRequest() {

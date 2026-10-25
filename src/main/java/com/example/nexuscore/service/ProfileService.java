@@ -47,9 +47,6 @@ public class ProfileService {
         if (request.name() != null) {
             profile.setName(request.name());
         }
-        if (request.profileImageUrl() != null) {
-            profile.setProfileImageUrl(request.profileImageUrl());
-        }
         if (request.phones() != null) {
             profile.setPhones(new LinkedHashSet<>(request.phones()));
         }

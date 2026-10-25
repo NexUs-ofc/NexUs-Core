@@ -19,6 +19,7 @@ public final class StockMapper {
                 item.getFood().getId(),
                 item.getFood().getName(),
                 item.getFood().getProductBrand(),
+                item.getFood().getFoodImageUrl(),
                 item.getFood().getUnitOfMeasure().name(),
                 item.getQuantity(),
                 item.getExpiryDate());
@@ -31,6 +32,7 @@ public final class StockMapper {
                 food.getName(),
                 category != null ? category.getCategoryName() : null,
                 food.getProductBrand(),
+                food.getFoodImageUrl(),
                 food.getPackageQuantity(),
                 food.getUnitOfMeasure().name());
     }
@@ -39,6 +41,7 @@ public final class StockMapper {
         return new PantryProductSettingResponse(
                 setting.getFood().getId(),
                 setting.getFood().getName(),
+                setting.getFood().getFoodImageUrl(),
                 setting.getMinimumQuantity());
     }
 

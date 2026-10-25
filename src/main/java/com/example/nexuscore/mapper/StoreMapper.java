@@ -14,6 +14,7 @@ public final class StoreMapper {
         Address address = store.getProfile().getAddress();
         return new StoreResponse(
                 store.getId(), store.getProfile().getName(), store.getCnpj(),
+                store.getProfile().getProfileImageUrl(),
                 address == null ? null : address.getStreet(),
                 address == null ? null : address.getNumber(),
                 address == null ? null : address.getNeighborhood(),
@@ -26,7 +27,7 @@ public final class StoreMapper {
 
     public static StoreResponse toResponse(StoreDistanceProjection projection) {
         return new StoreResponse(
-                projection.getId(), projection.getName(), projection.getCnpj(),
+                projection.getId(), projection.getName(), projection.getCnpj(), projection.getStoreImageUrl(),
                 projection.getStreet(), projection.getNumber(), projection.getNeighborhood(),
                 projection.getCity(), projection.getState(), projection.getLatitude(), projection.getLongitude(),
                 projection.getDistanceKm(), projection.getOpeningTime(), projection.getClosingTime());

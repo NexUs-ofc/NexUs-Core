@@ -105,6 +105,9 @@ public class StockService {
     public StockItemResponse registerFood(Integer profileId, FoodRegistrationRequest request) {
         Food food = foodRepository.findByGtin(request.gtin())
                 .orElseGet(() -> createFoodFromRegistration(request));
+        if (food.getFoodImageUrl() == null && request.foodImageUrl() != null) {
+            food.setFoodImageUrl(request.foodImageUrl());
+        }
         Profile profile = profileRepository.getReferenceById(profileId);
         PantryItem item = new PantryItem(food, profile, request.quantity(), request.expiryDate());
         PantryItem saved = pantryItemRepository.save(item);
@@ -124,7 +127,7 @@ public class StockService {
                 .orElseGet(() -> categoryRepository.save(new Category(categoryName)));
 
         Food food = new Food(request.name(), category, request.productBrand(),
-                request.packageQuantity(), request.unitOfMeasure(), request.gtin());
+                request.packageQuantity(), request.unitOfMeasure(), request.gtin(), request.foodImageUrl());
         return foodRepository.save(food);
     }
 

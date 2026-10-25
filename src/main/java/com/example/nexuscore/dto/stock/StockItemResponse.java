@@ -7,6 +7,7 @@ public record StockItemResponse(
         Integer foodId,
         String foodName,
         String productBrand,
+        String foodImageUrl,
         String unitOfMeasure,
         Integer quantity,
         LocalDate expiryDate

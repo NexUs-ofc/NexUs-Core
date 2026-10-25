@@ -15,8 +15,10 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -45,6 +47,14 @@ class SecurityConfigTest {
     void keepsApplicationEndpointsProtected() throws Exception {
         mockMvc.perform(get("/api/profile"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void keepsImageEndpointsProtected() throws Exception {
+        mockMvc.perform(put("/api/profile/image")).andExpect(status().isUnauthorized());
+        mockMvc.perform(delete("/api/profile/image")).andExpect(status().isUnauthorized());
+        mockMvc.perform(put("/api/companies/me/stores/1/image")).andExpect(status().isUnauthorized());
+        mockMvc.perform(delete("/api/companies/me/stores/1/image")).andExpect(status().isUnauthorized());
     }
 
     @Test
