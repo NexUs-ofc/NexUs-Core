@@ -48,7 +48,7 @@ class DistanceMatrixGeocodingServiceTest {
     @ValueSource(strings = {"results", "result"})
     void sendsAddressAndConfiguredKeyAndParsesCoordinates(String resultsField) {
         server.expect(request -> {
-            assertThat(request.getURI().getHost()).isEqualTo("api-v2.distancematrix.ai");
+            assertThat(request.getURI().getHost()).isEqualTo("api.distancematrix.ai");
             assertThat(request.getURI().getPath()).isEqualTo("/maps/api/geocode/json");
             assertThat(queryParameters(request.getURI().getRawQuery())).containsExactlyInAnyOrderEntriesOf(Map.of(
                     "address", "Estrada São Francisco & A+B #1, Jardim Henriqueta, Taboão da Serra, Brasil",

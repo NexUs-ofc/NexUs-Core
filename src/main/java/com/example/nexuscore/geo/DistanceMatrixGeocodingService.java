@@ -17,7 +17,7 @@ import java.util.Optional;
 @Service
 public class DistanceMatrixGeocodingService implements GeocodingService {
 
-    private static final String BASE_URL = "https://api-v2.distancematrix.ai";
+    private static final String BASE_URL = "https://api.distancematrix.ai";
 
     private final RestClient restClient;
     private final String apiKey;
