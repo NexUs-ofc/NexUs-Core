@@ -29,6 +29,11 @@ public class RecipeController {
         return service.listSaved(currentProfile.profileId().intValue());
     }
 
+    @GetMapping("/{id}")
+    public RecipeResponse getSaved(@PathVariable String id) {
+        return service.getSaved(currentProfile.profileId().intValue(), id);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteSaved(@PathVariable String id) {
