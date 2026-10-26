@@ -47,6 +47,34 @@ class SecurityConfigTest {
     }
 
     @Test
+    void documentsBearerAuthenticationForApplicationEndpoints() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.components.securitySchemes.BearerAuth.type").value("http"))
+                .andExpect(jsonPath("$.components.securitySchemes.BearerAuth.scheme").value("bearer"))
+                .andExpect(jsonPath("$.components.securitySchemes.BearerAuth.bearerFormat").value("JWT"))
+                .andExpect(jsonPath("$.security[0].BearerAuth").isArray())
+                .andExpect(jsonPath("$.paths['/api/profile'].get.security").doesNotExist());
+    }
+
+    @Test
+    void documentsDedicatedKeysInsteadOfBearerForInternalAndAdminEndpoints() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.components.securitySchemes.NotifyTokenAuth.type").value("apiKey"))
+                .andExpect(jsonPath("$.components.securitySchemes.NotifyTokenAuth.in").value("header"))
+                .andExpect(jsonPath("$.components.securitySchemes.NotifyTokenAuth.name").value("X-Notify-Token"))
+                .andExpect(jsonPath("$.components.securitySchemes.AdminKeyAuth.type").value("apiKey"))
+                .andExpect(jsonPath("$.components.securitySchemes.AdminKeyAuth.in").value("header"))
+                .andExpect(jsonPath("$.components.securitySchemes.AdminKeyAuth.name").value("X-Admin-Key"))
+                .andExpect(jsonPath("$.paths['/internal/notifications/products'].get.security.length()").value(1))
+                .andExpect(jsonPath("$.paths['/internal/notifications/products'].get.security[0].NotifyTokenAuth")
+                        .isArray())
+                .andExpect(jsonPath("$.paths['/admin/session'].get.security.length()").value(1))
+                .andExpect(jsonPath("$.paths['/admin/session'].get.security[0].AdminKeyAuth").isArray());
+    }
+
+    @Test
     void keepsApplicationEndpointsProtected() throws Exception {
         mockMvc.perform(get("/api/profile"))
                 .andExpect(status().isUnauthorized());
