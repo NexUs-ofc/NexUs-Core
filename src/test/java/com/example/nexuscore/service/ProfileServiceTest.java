@@ -76,7 +76,7 @@ class ProfileServiceTest {
         when(geocoding.geocode("Estrada São Francisco", "10", "Jardim Henriqueta", "Taboão da Serra", "SP"))
                 .thenReturn(Optional.of(new GeoPoint(new BigDecimal("-23.61"), new BigDecimal("-46.77"))));
 
-        service.update(12, new ProfileRequest(null, null, null, changedAddress(), null));
+        service.update(12, new ProfileRequest(null, null, changedAddress(), null));
 
         assertEquals(new BigDecimal("-23.61"), address.getLatitude());
         assertEquals(new BigDecimal("-46.77"), address.getLongitude());
@@ -92,7 +92,7 @@ class ProfileServiceTest {
         when(profiles.findById(12)).thenReturn(Optional.of(profile));
 
         assertThrows(IllegalArgumentException.class,
-                () -> service.update(12, new ProfileRequest(null, null, null, changedAddress(), null)));
+                () -> service.update(12, new ProfileRequest(null, null, changedAddress(), null)));
 
         assertEquals("Rua A", address.getStreet());
         assertEquals(new BigDecimal("-23.550520"), address.getLatitude());
@@ -105,7 +105,7 @@ class ProfileServiceTest {
         when(profiles.findById(12)).thenReturn(Optional.of(profile));
         when(addresses.save(any(Address.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        service.update(12, new ProfileRequest(null, null, null, changedAddress(), null));
+        service.update(12, new ProfileRequest(null, null, changedAddress(), null));
 
         ArgumentCaptor<Address> saved = ArgumentCaptor.forClass(Address.class);
         verify(addresses).save(saved.capture());
@@ -126,7 +126,7 @@ class ProfileServiceTest {
         AddressRequest request = locationChanged ? changedAddress()
                 : new AddressRequest("Centro", "Rua A", "10", "01001000", "Sao Paulo", "SP");
 
-        service.update(12, new ProfileRequest(null, null, null, request, null));
+        service.update(12, new ProfileRequest(null, null, request, null));
 
         verify(addresses).save(address);
         assertEquals(request.street(), address.getStreet());
@@ -141,7 +141,7 @@ class ProfileServiceTest {
         Profile profile = new Profile(null, "company@example.com", "Empresa", null, ProfileType.COMPANY, Set.of());
         when(profiles.findById(12)).thenReturn(Optional.of(profile));
 
-        service.update(12, new ProfileRequest("Nova empresa", null, null, null, null));
+        service.update(12, new ProfileRequest("Nova empresa", null, null, null));
 
         assertEquals("Nova empresa", profile.getName());
         assertNull(profile.getAddress());
