@@ -1,5 +1,6 @@
 package com.example.nexuscore.controller;
 
+import com.example.nexuscore.dto.stock.FoodBatchRegistrationRequest;
 import com.example.nexuscore.dto.stock.FoodRegistrationRequest;
 import com.example.nexuscore.dto.stock.StockItemResponse;
 import com.example.nexuscore.service.StockService;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/foods")
@@ -28,5 +30,11 @@ public class FoodController {
     @ResponseStatus(HttpStatus.CREATED)
     public StockItemResponse register(@Valid @RequestBody FoodRegistrationRequest request) {
         return service.registerFood(currentProfile.profileId().intValue(), request);
+    }
+
+    @PostMapping("/batch")
+    @ResponseStatus(HttpStatus.CREATED)
+    public List<StockItemResponse> registerBatch(@Valid @RequestBody FoodBatchRegistrationRequest request) {
+        return service.registerFoods(currentProfile.profileId().intValue(), request.products());
     }
 }

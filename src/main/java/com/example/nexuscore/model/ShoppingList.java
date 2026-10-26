@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,8 +20,8 @@ public class ShoppingList {
 
     private String title;
 
-    @Field("event_id")
-    private String eventId;
+    @Field(write = Field.Write.NON_NULL)
+    private LocalDate date;
 
     @Field("array_list")
     private List<ShoppingListItem> arrayList = new ArrayList<>();
@@ -28,10 +29,10 @@ public class ShoppingList {
     protected ShoppingList() {
     }
 
-    public ShoppingList(Integer householdId, String title, String eventId) {
+    public ShoppingList(Integer householdId, String title, LocalDate date) {
         this.householdId = householdId;
         this.title = title;
-        this.eventId = eventId;
+        this.date = date;
     }
 
     public String getId() {
@@ -43,8 +44,8 @@ public class ShoppingList {
     public String getTitle() {
         return title;
     }
-    public String getEventId() {
-        return eventId;
+    public LocalDate getDate() {
+        return date;
     }
     public List<ShoppingListItem> getArrayList() {
         return arrayList;
@@ -52,5 +53,9 @@ public class ShoppingList {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
     }
 }

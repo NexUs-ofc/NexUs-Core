@@ -42,7 +42,7 @@ jobs:
       - name: Grant permission to Maven Wrapper
         run: chmod +x mvnw
 
-      - name: Run tests including real MongoDB date boundaries
+      - name: Run tests including MongoDB shopping list persistence
         run: ./mvnw test -Dmongodb.test.uri=mongodb://localhost:27017
 
   lint:
