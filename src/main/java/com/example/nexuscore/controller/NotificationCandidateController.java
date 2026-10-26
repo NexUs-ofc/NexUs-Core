@@ -6,6 +6,7 @@ import com.example.nexuscore.dto.notification.NewStoreCandidate;
 import com.example.nexuscore.dto.notification.NotificationCandidatePage;
 import com.example.nexuscore.dto.notification.ProductNotificationCandidate;
 import com.example.nexuscore.service.NotificationCandidateService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/internal/notifications")
+@SecurityRequirement(name = "NotifyTokenAuth")
 public class NotificationCandidateController {
 
     private final NotificationCandidateService service;
