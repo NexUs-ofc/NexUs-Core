@@ -31,6 +31,8 @@ public class Recipe {
 
     private List<RecipeIngredient> ingredients = new ArrayList<>();
 
+    private List<RecipeStep> steps = new ArrayList<>();
+
     private String instructions;
 
     @Field("created_by")
@@ -67,6 +69,10 @@ public class Recipe {
 
     public List<RecipeIngredient> getIngredients() {
         return ingredients;
+    }
+
+    public List<RecipeStep> getSteps() {
+        return steps;
     }
 
     public String getInstructions() {

@@ -2,10 +2,13 @@ package com.example.nexuscore.mapper;
 
 import com.example.nexuscore.dto.recipe.RecipeIngredientResponse;
 import com.example.nexuscore.dto.recipe.RecipeResponse;
+import com.example.nexuscore.dto.recipe.RecipeStepResponse;
 import com.example.nexuscore.model.Recipe;
 import com.example.nexuscore.model.RecipeIngredient;
+import com.example.nexuscore.model.RecipeStep;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class RecipeMapper {
     private RecipeMapper() {
@@ -26,6 +29,10 @@ public final class RecipeMapper {
                                 ingredient.getMandatory(),
                                 ingredient.getPossibleSubstitutes(),
                                 ingredient.getFoodId() == null ? null : foodNames.get(ingredient.getFoodId())))
+                        .toList(),
+                (recipe.getSteps() == null ? List.<RecipeStep>of() : recipe.getSteps()).stream()
+                        .filter(Objects::nonNull)
+                        .map(step -> new RecipeStepResponse(step.getTitle(), step.getDescription()))
                         .toList(),
                 recipe.getInstructions(),
                 recipe.getCreatedBy());
