@@ -10,6 +10,7 @@ public record RecipeResponse(
         String estimatedTime,
         RecipeDifficulty difficulty,
         List<RecipeIngredientResponse> ingredients,
+        List<RecipeStepResponse> steps,
         String instructions,
         String createdBy
 ) {}
