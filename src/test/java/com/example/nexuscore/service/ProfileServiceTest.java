@@ -36,6 +36,21 @@ class ProfileServiceTest {
             mock(ProfileRestrictionsCache.class));
 
     @Test
+    void updatingProfileDetailsPreservesExistingImageUrl() {
+        ProfileRepository profiles = mock(ProfileRepository.class);
+        ProfileService service = new ProfileService(profiles, mock(AddressRepository.class),
+                mock(GeocodingService.class), mock(ProfileRestrictionsCache.class));
+        Profile profile = new Profile(null, "company@example.com", "Company", "https://example.com/current.png",
+                ProfileType.COMPANY, Set.of());
+        when(profiles.findById(12)).thenReturn(Optional.of(profile));
+
+        service.update(12, new ProfileRequest("New name", null, null, null));
+
+        assertEquals("New name", profile.getName());
+        assertEquals("https://example.com/current.png", profile.getProfileImageUrl());
+    }
+
+    @Test
     void keepsCoordinatesWithoutGeocodingWhenOnlyCepChanges() {
         Address address = new Address("Centro", "Rua A", "10", "01001000", "Sao Paulo", "SP",
                 new BigDecimal("-23.550520"), new BigDecimal("-46.633308"));
@@ -43,7 +58,7 @@ class ProfileServiceTest {
         when(profiles.findById(12)).thenReturn(Optional.of(profile));
         when(addresses.save(address)).thenReturn(address);
 
-        service.update(12, new ProfileRequest(null, null, null,
+        service.update(12, new ProfileRequest(null, null,
                 new AddressRequest("Centro", "Rua A", "10", "01002000", "Sao Paulo", "SP"), null));
 
         assertEquals("01002000", address.getCep());

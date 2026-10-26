@@ -1,7 +1,9 @@
 package com.example.nexuscore.model;
 
+import com.example.nexuscore.converter.RecipeDifficultyConverter;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -20,6 +22,12 @@ public class Recipe {
 
     @Field("serving_size")
     private Integer servingSize;
+
+    @Field("estimated_time")
+    private String estimatedTime;
+
+    @ValueConverter(RecipeDifficultyConverter.class)
+    private RecipeDifficulty difficulty;
 
     private List<RecipeIngredient> ingredients = new ArrayList<>();
 
@@ -47,6 +55,14 @@ public class Recipe {
 
     public Integer getServingSize() {
         return servingSize;
+    }
+
+    public String getEstimatedTime() {
+        return estimatedTime;
+    }
+
+    public RecipeDifficulty getDifficulty() {
+        return difficulty;
     }
 
     public List<RecipeIngredient> getIngredients() {
