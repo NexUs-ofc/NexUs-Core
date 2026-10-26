@@ -4,6 +4,7 @@ import com.example.nexuscore.config.CoreConfiguration;
 import com.example.nexuscore.config.SecurityConfig;
 import com.example.nexuscore.dto.recipe.RecipeIngredientResponse;
 import com.example.nexuscore.dto.recipe.RecipeResponse;
+import com.example.nexuscore.dto.recipe.RecipeStepResponse;
 import com.example.nexuscore.exception.NotFoundException;
 import com.example.nexuscore.model.RecipeDifficulty;
 import com.example.nexuscore.service.RecipeService;
@@ -80,6 +81,11 @@ class RecipeControllerTest {
                 .andExpect(jsonPath("$[0].servingSize").value(4))
                 .andExpect(jsonPath("$[0].estimatedTime").value("30 minutos"))
                 .andExpect(jsonPath("$[0].difficulty").value("EASY"))
+                .andExpect(jsonPath("$[0].steps.length()").value(2))
+                .andExpect(jsonPath("$[0].steps[0].title").value("Cortar e temperar o frango"))
+                .andExpect(jsonPath("$[0].steps[0].description").value("Corte o frango.\nTempere com sal e pimenta."))
+                .andExpect(jsonPath("$[0].steps[1].title").value("Cozinhar o frango"))
+                .andExpect(jsonPath("$[0].steps[1].description").value("Cozinhe por 15 minutos."))
                 .andExpect(jsonPath("$[0].ingredients[0].foodName").value("Peito de frango"));
 
         verify(service).listSaved(12);
@@ -101,6 +107,11 @@ class RecipeControllerTest {
                 .andExpect(jsonPath("$.ingredients[0].requiredQuantity").value("500g"))
                 .andExpect(jsonPath("$.ingredients[0].mandatory").value(true))
                 .andExpect(jsonPath("$.ingredients[0].possibleSubstitutes[0]").value(7))
+                .andExpect(jsonPath("$.steps.length()").value(2))
+                .andExpect(jsonPath("$.steps[0].title").value("Cortar e temperar o frango"))
+                .andExpect(jsonPath("$.steps[0].description").value("Corte o frango.\nTempere com sal e pimenta."))
+                .andExpect(jsonPath("$.steps[1].title").value("Cozinhar o frango"))
+                .andExpect(jsonPath("$.steps[1].description").value("Cozinhe por 15 minutos."))
                 .andExpect(jsonPath("$.instructions").value("Corte o frango.\nCozinhe por 15 minutos."))
                 .andExpect(jsonPath("$.createdBy").value("Cerita"));
 
@@ -109,7 +120,8 @@ class RecipeControllerTest {
 
     @Test
     void returnsRecipesWithoutOptionalMetadata() throws Exception {
-        RecipeResponse legacy = new RecipeResponse(ID, "Arroz", 4, null, null, List.of(), "Cozinhe.", "ai");
+        RecipeResponse legacy = new RecipeResponse(ID, "Arroz", 4, null, null,
+                List.of(), List.of(), "Cozinhe.", "ai");
         when(service.listSaved(12)).thenReturn(List.of(legacy));
         when(service.getSaved(12, ID)).thenReturn(legacy);
 
@@ -117,11 +129,15 @@ class RecipeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].servingSize").value(4))
                 .andExpect(jsonPath("$[0].estimatedTime").doesNotExist())
-                .andExpect(jsonPath("$[0].difficulty").doesNotExist());
+                .andExpect(jsonPath("$[0].difficulty").doesNotExist())
+                .andExpect(jsonPath("$[0].steps").isEmpty())
+                .andExpect(jsonPath("$[0].instructions").value("Cozinhe."));
         mockMvc.perform(get(RECIPES + "/" + ID).header("Authorization", "Bearer profile-token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estimatedTime").doesNotExist())
-                .andExpect(jsonPath("$.difficulty").doesNotExist());
+                .andExpect(jsonPath("$.difficulty").doesNotExist())
+                .andExpect(jsonPath("$.steps").isEmpty())
+                .andExpect(jsonPath("$.instructions").value("Cozinhe."));
     }
 
     @ParameterizedTest
@@ -172,6 +188,9 @@ class RecipeControllerTest {
     private RecipeResponse recipe(RecipeDifficulty difficulty) {
         return new RecipeResponse(ID, "Frango ao molho", 4, "30 minutos", difficulty,
                 List.of(new RecipeIngredientResponse(5, "500g", true, List.of(7), "Peito de frango")),
+                List.of(new RecipeStepResponse("Cortar e temperar o frango",
+                                "Corte o frango.\nTempere com sal e pimenta."),
+                        new RecipeStepResponse("Cozinhar o frango", "Cozinhe por 15 minutos.")),
                 "Corte o frango.\nCozinhe por 15 minutos.", "Cerita");
     }
 }

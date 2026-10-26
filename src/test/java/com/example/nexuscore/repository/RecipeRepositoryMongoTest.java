@@ -1,6 +1,7 @@
 package com.example.nexuscore.repository;
 
 import com.example.nexuscore.dto.recipe.RecipeResponse;
+import com.example.nexuscore.dto.recipe.RecipeStepResponse;
 import com.example.nexuscore.exception.NotFoundException;
 import com.example.nexuscore.model.Food;
 import com.example.nexuscore.model.Recipe;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory;
 import java.time.Instant;
@@ -102,6 +104,49 @@ class RecipeRepositoryMongoTest {
         assertThat(details.servingSize()).isEqualTo(4);
         assertThat(details.estimatedTime()).isNull();
         assertThat(details.difficulty()).isNull();
+        assertThat(details.steps()).isEmpty();
+    }
+
+    @Test
+    void readsAndPersistsStructuredStepsWithoutLegacyInstructions() {
+        String description = "Lave o arroz em água corrente.\nEscorra antes de cozinhar.";
+        Document document = recipe(1).append("account_id", 12).append("steps", List.of(
+                new Document("title", "Lavar o arroz").append("description", description),
+                new Document("title", "Cozinhar o arroz").append("description", "Cozinhe até ficar macio.")));
+        document.remove("instructions");
+        insert(document);
+        ObjectId id = document.getObjectId("_id");
+        List<RecipeStepResponse> expected = List.of(
+                new RecipeStepResponse("Lavar o arroz", description),
+                new RecipeStepResponse("Cozinhar o arroz", "Cozinhe até ficar macio."));
+
+        RecipeResponse details = service.getSaved(12, id.toHexString());
+
+        assertThat(details.steps()).containsExactlyElementsOf(expected);
+        assertThat(details.instructions()).isNull();
+        assertThat(service.listSaved(12)).containsExactly(details);
+        recipes.save(recipes.findById(id).orElseThrow());
+        assertThat(service.getSaved(12, id.toHexString()).steps()).containsExactlyElementsOf(expected);
+        Document stored = template.getCollection("recipes").find(new Document("_id", id)).first();
+        assertThat(stored).isNotNull();
+        assertThat(stored.getList("steps", Document.class))
+                .containsExactly(new Document("title", "Lavar o arroz").append("description", description),
+                        new Document("title", "Cozinhar o arroz")
+                                .append("description", "Cozinhe até ficar macio."));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    void readsNullOrEmptyStepsWithoutConvertingLegacyInstructions(List<Document> steps) {
+        Document document = recipe(1).append("account_id", 12).append("steps", steps);
+        insert(document);
+        ObjectId id = document.getObjectId("_id");
+
+        RecipeResponse details = service.getSaved(12, id.toHexString());
+
+        assertThat(details.steps()).isEmpty();
+        assertThat(details.instructions()).isEqualTo("Lave o arroz.\nCozinhe até ficar macio.");
+        assertThat(service.listSaved(12)).containsExactly(details);
     }
 
     @ParameterizedTest

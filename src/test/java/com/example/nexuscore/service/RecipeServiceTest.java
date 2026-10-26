@@ -2,18 +2,21 @@ package com.example.nexuscore.service;
 
 import com.example.nexuscore.dto.recipe.RecipeIngredientResponse;
 import com.example.nexuscore.dto.recipe.RecipeResponse;
+import com.example.nexuscore.dto.recipe.RecipeStepResponse;
 import com.example.nexuscore.exception.NotFoundException;
 import com.example.nexuscore.model.Food;
 import com.example.nexuscore.model.Recipe;
 import com.example.nexuscore.model.RecipeAccount;
 import com.example.nexuscore.model.RecipeDifficulty;
 import com.example.nexuscore.model.RecipeIngredient;
+import com.example.nexuscore.model.RecipeStep;
 import com.example.nexuscore.repository.FoodRepository;
 import com.example.nexuscore.repository.RecipeAccountRepository;
 import com.example.nexuscore.repository.RecipeRepository;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -89,6 +92,51 @@ class RecipeServiceTest {
                 result.ingredients().get(0));
         verify(recipes).findByIdAndAccountId(ID, 12);
         verifyNoInteractions(activities);
+    }
+
+    @Test
+    void returnsStructuredStepsInStoredOrderInListAndDetails() {
+        Recipe recipe = recipe(ID, "Frango ao molho", List.of());
+        String description = "Em uma tábua, corte o frango em cubos.\nTempere com sal e pimenta.";
+        List<RecipeStep> steps = List.of(
+                step("Cortar e temperar o frango", description),
+                step("Refogar a cebola e o alho", "Em uma panela, refogue a cebola e o alho no azeite."));
+        when(recipe.getSteps()).thenReturn(steps);
+        when(recipes.findByIdAndAccountId(ID, 12)).thenReturn(Optional.of(recipe));
+        when(recipes.findByAccountIdOrIdIn(12, List.of())).thenReturn(List.of(recipe));
+
+        List<RecipeStepResponse> expected = List.of(
+                new RecipeStepResponse("Cortar e temperar o frango", description),
+                new RecipeStepResponse("Refogar a cebola e o alho",
+                        "Em uma panela, refogue a cebola e o alho no azeite."));
+
+        assertEquals(expected, service.getSaved(12, ID.toHexString()).steps());
+        assertEquals(expected, service.listSaved(12).get(0).steps());
+        verifyNoInteractions(foods, activities);
+    }
+
+    @Test
+    void preservesLegacyInstructionsWithoutInventingStructuredSteps() {
+        Recipe recipe = recipe(ID, "Frango ao molho", List.of());
+        when(recipe.getSteps()).thenReturn(null);
+        when(recipes.findByIdAndAccountId(ID, 12)).thenReturn(Optional.of(recipe));
+
+        RecipeResponse result = service.getSaved(12, ID.toHexString());
+
+        assertEquals(List.of(), result.steps());
+        assertEquals("Corte o frango.\nCozinhe por 15 minutos.", result.instructions());
+    }
+
+    @Test
+    void skipsNullStepsAndPreservesAvailableFieldsWithoutChangingTheirOrder() {
+        Recipe recipe = recipe(ID, "Frango ao molho", List.of());
+        List<RecipeStep> steps = Arrays.asList(null, step(null, "Tempere o frango."), step("Cozinhar", null));
+        when(recipe.getSteps()).thenReturn(steps);
+        when(recipes.findByIdAndAccountId(ID, 12)).thenReturn(Optional.of(recipe));
+
+        assertEquals(List.of(new RecipeStepResponse(null, "Tempere o frango."),
+                        new RecipeStepResponse("Cozinhar", null)),
+                service.getSaved(12, ID.toHexString()).steps());
     }
 
     @Test
@@ -266,6 +314,13 @@ class RecipeServiceTest {
         when(ingredient.getMandatory()).thenReturn(true);
         when(ingredient.getPossibleSubstitutes()).thenReturn(List.of(7));
         return ingredient;
+    }
+
+    private RecipeStep step(String title, String description) {
+        RecipeStep step = mock(RecipeStep.class);
+        when(step.getTitle()).thenReturn(title);
+        when(step.getDescription()).thenReturn(description);
+        return step;
     }
 
     private Food food(Integer id, String name) {
