@@ -10,7 +10,6 @@ import com.example.nexuscore.model.UnitOfMeasure;
 import com.example.nexuscore.repository.CategoryRepository;
 import com.example.nexuscore.repository.FoodRepository;
 import com.example.nexuscore.repository.PantryItemRepository;
-import com.example.nexuscore.repository.PantryProductSettingRepository;
 import com.example.nexuscore.repository.ProfileRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,8 +35,7 @@ class FoodImageTest {
     private final CategoryRepository categories = mock(CategoryRepository.class);
     private final ProfileRepository profiles = mock(ProfileRepository.class);
     private final GpcCategoryResolver resolver = mock(GpcCategoryResolver.class);
-    private final StockService service = new StockService(items, mock(PantryProductSettingRepository.class),
-            foods, categories, profiles, resolver,
+    private final StockService service = new StockService(items, foods, categories, profiles, resolver,
             mock(ProductRankingService.class), mock(ActivityRecordService.class));
 
     @BeforeEach

@@ -106,19 +106,6 @@ Table postgres.pantry_item {
   created_at timestamp [not null]
 }
 
-Table postgres.pantry_product_setting {
-  id integer [pk, increment]
-  food_id integer [not null]
-  profile_id integer [not null]
-  minimum_quantity integer [not null]
-  created_at timestamp [not null]
-  updated_at timestamp [not null]
-
-  indexes {
-    (profile_id, food_id) [unique]
-  }
-}
-
 Table postgres.plan {
   id integer [pk, increment]
   plan_price decimal(10,2) [not null]
@@ -206,8 +193,6 @@ Ref: postgres.profile_phone.profile_id > postgres.profile.id
 Ref: postgres.auth_method.profile_id > postgres.profile.id
 Ref: postgres.pantry_item.food_id > postgres.food.id
 Ref: postgres.pantry_item.profile_id > postgres.profile.id
-Ref: postgres.pantry_product_setting.food_id > postgres.food.id
-Ref: postgres.pantry_product_setting.profile_id > postgres.profile.id
 Ref: postgres.company.plan_id > postgres.plan.id
 Ref: postgres.company.profile_id > postgres.profile.id
 Ref: postgres.store.company_id > postgres.company.id
