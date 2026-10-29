@@ -3,8 +3,6 @@ package com.example.nexuscore.service;
 import com.example.nexuscore.categorization.GpcCategoryResolver;
 import com.example.nexuscore.dto.stock.FoodRegistrationRequest;
 import com.example.nexuscore.dto.stock.FoodResponse;
-import com.example.nexuscore.dto.stock.MinimumQuantityRequest;
-import com.example.nexuscore.dto.stock.PantryProductSettingResponse;
 import com.example.nexuscore.dto.stock.StockItemRequest;
 import com.example.nexuscore.dto.stock.StockItemResponse;
 import com.example.nexuscore.dto.stock.StockItemUpdateRequest;
@@ -15,12 +13,10 @@ import com.example.nexuscore.model.Address;
 import com.example.nexuscore.model.Category;
 import com.example.nexuscore.model.Food;
 import com.example.nexuscore.model.PantryItem;
-import com.example.nexuscore.model.PantryProductSetting;
 import com.example.nexuscore.model.Profile;
 import com.example.nexuscore.repository.CategoryRepository;
 import com.example.nexuscore.repository.FoodRepository;
 import com.example.nexuscore.repository.PantryItemRepository;
-import com.example.nexuscore.repository.PantryProductSettingRepository;
 import com.example.nexuscore.repository.ProfileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +30,6 @@ import java.util.List;
 public class StockService {
 
     private final PantryItemRepository pantryItemRepository;
-    private final PantryProductSettingRepository settingRepository;
     private final FoodRepository foodRepository;
     private final CategoryRepository categoryRepository;
     private final ProfileRepository profileRepository;
@@ -43,7 +38,6 @@ public class StockService {
     private final ActivityRecordService activityRecordService;
 
     public StockService(PantryItemRepository pantryItemRepository,
-                         PantryProductSettingRepository settingRepository,
                          FoodRepository foodRepository,
                          CategoryRepository categoryRepository,
                          ProfileRepository profileRepository,
@@ -51,7 +45,6 @@ public class StockService {
                          ProductRankingService rankingService,
                          ActivityRecordService activityRecordService) {
         this.pantryItemRepository = pantryItemRepository;
-        this.settingRepository = settingRepository;
         this.foodRepository = foodRepository;
         this.categoryRepository = categoryRepository;
         this.profileRepository = profileRepository;
@@ -72,23 +65,11 @@ public class StockService {
                 .toList();
     }
 
-    public List<PantryProductSettingResponse> missing(Integer profileId) {
-        return settingRepository.findMissingByProfileId(profileId).stream()
-                .map(StockMapper::toResponse)
-                .toList();
-    }
-
     public List<FoodResponse> searchFoods(String search) {
         List<Food> foods = search == null || search.isBlank()
                 ? foodRepository.findAll()
                 : foodRepository.findByNameContainingIgnoreCase(search);
         return foods.stream().map(StockMapper::toResponse).toList();
-    }
-
-    public List<PantryProductSettingResponse> listSettings(Integer profileId) {
-        return settingRepository.findByProfileId(profileId).stream()
-                .map(StockMapper::toResponse)
-                .toList();
     }
 
     @Transactional
@@ -184,21 +165,6 @@ public class StockService {
         pantryItemRepository.save(item);
         activityRecordService.record(profileId, "stock_item_removed",
                 "Removeu " + item.getFood().getName() + " do estoque");
-    }
-
-    @Transactional
-    public PantryProductSettingResponse setMinimumQuantity(Integer profileId, Integer foodId,
-                                                              MinimumQuantityRequest request) {
-        Food food = foodRepository.findById(foodId)
-                .orElseThrow(() -> new NotFoundException("Alimento nao encontrado: " + foodId));
-        PantryProductSetting setting = settingRepository.findByProfileIdAndFoodId(profileId, foodId)
-                .orElseGet(() -> new PantryProductSetting(food,
-                        profileRepository.getReferenceById(profileId), request.minimumQuantity()));
-        setting.setMinimumQuantity(request.minimumQuantity());
-        PantryProductSetting saved = settingRepository.save(setting);
-        activityRecordService.record(profileId, "minimum_stock_quantity_changed",
-                "Definiu o estoque mínimo de " + food.getName() + " para " + request.minimumQuantity());
-        return StockMapper.toResponse(saved);
     }
 
     private PantryItem findOwnedItem(Integer profileId, Integer itemId) {

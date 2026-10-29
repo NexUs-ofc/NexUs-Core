@@ -12,7 +12,6 @@ import com.example.nexuscore.model.UnitOfMeasure;
 import com.example.nexuscore.repository.CategoryRepository;
 import com.example.nexuscore.repository.FoodRepository;
 import com.example.nexuscore.repository.PantryItemRepository;
-import com.example.nexuscore.repository.PantryProductSettingRepository;
 import com.example.nexuscore.repository.ProfileRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -68,8 +67,7 @@ class FoodBatchRegistrationTest {
 
     @BeforeEach
     void setUp() {
-        StockService target = new StockService(items, mock(PantryProductSettingRepository.class),
-                foods, categories, profiles, resolver, ranking, activity);
+        StockService target = new StockService(items, foods, categories, profiles, resolver, ranking, activity);
         TransactionInterceptor interceptor = new TransactionInterceptor();
         interceptor.setTransactionManager(transactions);
         interceptor.setTransactionAttributeSource(new AnnotationTransactionAttributeSource());

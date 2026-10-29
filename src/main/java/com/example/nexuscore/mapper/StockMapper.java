@@ -2,12 +2,10 @@ package com.example.nexuscore.mapper;
 
 import com.example.nexuscore.dto.notification.ProductCandidateResponse;
 import com.example.nexuscore.dto.stock.FoodResponse;
-import com.example.nexuscore.dto.stock.PantryProductSettingResponse;
 import com.example.nexuscore.dto.stock.StockItemResponse;
 import com.example.nexuscore.model.Category;
 import com.example.nexuscore.model.Food;
 import com.example.nexuscore.model.PantryItem;
-import com.example.nexuscore.model.PantryProductSetting;
 
 public final class StockMapper {
     private StockMapper() {
@@ -35,14 +33,6 @@ public final class StockMapper {
                 food.getFoodImageUrl(),
                 food.getPackageQuantity(),
                 food.getUnitOfMeasure().name());
-    }
-
-    public static PantryProductSettingResponse toResponse(PantryProductSetting setting) {
-        return new PantryProductSettingResponse(
-                setting.getFood().getId(),
-                setting.getFood().getName(),
-                setting.getFood().getFoodImageUrl(),
-                setting.getMinimumQuantity());
     }
 
     public static ProductCandidateResponse toNotificationCandidate(PantryItem item) {
