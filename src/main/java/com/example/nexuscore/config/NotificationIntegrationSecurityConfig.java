@@ -24,6 +24,7 @@ public class NotificationIntegrationSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET,
                                 "/internal/notifications/products",
+                                "/internal/notifications/shopping-lists",
                                 "/internal/notifications/nearby-stores", "/internal/notifications/new-stores")
                         .hasAuthority(NotifyTokenFilter.AUTHORITY)
                         .anyRequest().denyAll())

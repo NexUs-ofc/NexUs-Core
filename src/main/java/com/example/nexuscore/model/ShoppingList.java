@@ -1,6 +1,7 @@
 package com.example.nexuscore.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "shopping_list")
+@CompoundIndex(name = "idx_shopping_list_notification_date", def = "{'date': 1, '_id': 1}")
 public class ShoppingList {
 
     @Id

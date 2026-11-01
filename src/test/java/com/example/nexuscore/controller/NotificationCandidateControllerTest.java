@@ -8,6 +8,7 @@ import com.example.nexuscore.dto.notification.NearbyStoreOption;
 import com.example.nexuscore.dto.notification.NewStoreCandidate;
 import com.example.nexuscore.dto.notification.NotificationCandidatePage;
 import com.example.nexuscore.dto.notification.ProductNotificationCandidate;
+import com.example.nexuscore.dto.notification.ShoppingListNotificationCandidate;
 import com.example.nexuscore.security.NotifyTokenFilter;
 import com.example.nexuscore.service.NotificationCandidateService;
 import jakarta.servlet.DispatcherType;
@@ -54,6 +55,7 @@ class NotificationCandidateControllerTest {
     private static final LocalDate FROM = LocalDate.of(2026, 10, 12);
     private static final LocalDate TO = LocalDate.of(2026, 10, 15);
     private static final String PRODUCTS = "/internal/notifications/products";
+    private static final String SHOPPING_LISTS = "/internal/notifications/shopping-lists";
     private static final String NEARBY_STORES = "/internal/notifications/nearby-stores";
     private static final String NEW_STORES = "/internal/notifications/new-stores";
 
@@ -77,6 +79,64 @@ class NotificationCandidateControllerTest {
 
     @EnableWebSecurity
     static class TestSecurityConfiguration {
+    }
+
+    @Test
+    void returnsShoppingListDateCompletionAndTargetId() throws Exception {
+        when(service.shoppingLists(FROM, TO, 1, 2)).thenReturn(new NotificationCandidatePage<>(List.of(
+                new ShoppingListNotificationCandidate(12, "list-1", "Mercado", TO, false),
+                new ShoppingListNotificationCandidate(12, "list-2", "Jantar", FROM, true)), true));
+
+        mockMvc.perform(get(SHOPPING_LISTS).header(NotifyTokenFilter.HEADER_NAME, TOKEN)
+                        .param("from", FROM.toString()).param("to", TO.toString())
+                        .param("page", "1").param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].profileId").value(12))
+                .andExpect(jsonPath("$.content[0].shoppingListId").value("list-1"))
+                .andExpect(jsonPath("$.content[0].title").value("Mercado"))
+                .andExpect(jsonPath("$.content[0].date").value(TO.toString()))
+                .andExpect(jsonPath("$.content[0].completed").value(false))
+                .andExpect(jsonPath("$.content[1].completed").value(true))
+                .andExpect(jsonPath("$.hasNext").value(true));
+        verifyNoInteractions(jwtDecoder);
+    }
+
+    @Test
+    void appliesShoppingListPaginationDefaults() throws Exception {
+        when(service.shoppingLists(FROM, TO, 0, 100))
+                .thenReturn(new NotificationCandidatePage<>(List.of(), false));
+        mockMvc.perform(get(SHOPPING_LISTS).header(NotifyTokenFilter.HEADER_NAME, TOKEN)
+                        .param("from", FROM.toString()).param("to", TO.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.hasNext").value(false));
+        verify(service).shoppingLists(FROM, TO, 0, 100);
+    }
+
+    @Test
+    void protectsShoppingListCandidatesAndRejectsWrites() throws Exception {
+        mockMvc.perform(get(SHOPPING_LISTS).param("from", FROM.toString()).param("to", TO.toString()))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get(SHOPPING_LISTS).header(NotifyTokenFilter.HEADER_NAME, "wrong-token")
+                        .param("from", FROM.toString()).param("to", TO.toString()))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get(SHOPPING_LISTS).header("Authorization", "Bearer user-token")
+                        .param("from", FROM.toString()).param("to", TO.toString()))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post(SHOPPING_LISTS).header(NotifyTokenFilter.HEADER_NAME, TOKEN))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(service, jwtDecoder);
+    }
+
+    @Test
+    void rejectsMissingAndMalformedShoppingListDates() throws Exception {
+        mockMvc.perform(get(SHOPPING_LISTS).header(NotifyTokenFilter.HEADER_NAME, TOKEN)
+                        .param("from", "invalid").param("to", TO.toString()))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get(SHOPPING_LISTS).header(NotifyTokenFilter.HEADER_NAME, TOKEN)
+                        .param("from", FROM.toString()))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(service);
     }
 
     @Test
