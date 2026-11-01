@@ -6,5 +6,6 @@ public record RecipeIngredientResponse(
         Integer foodId,
         String requiredQuantity,
         Boolean mandatory,
-        List<Integer> possibleSubstitutes
+        List<Integer> possibleSubstitutes,
+        String foodName
 ) {}

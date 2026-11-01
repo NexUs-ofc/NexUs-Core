@@ -33,7 +33,7 @@ public class ShoppingListService {
     }
 
     public ShoppingListResponse create(Integer householdId, ShoppingListRequest request) {
-        ShoppingList list = new ShoppingList(householdId, request.title(), request.eventId());
+        ShoppingList list = new ShoppingList(householdId, request.title(), request.date());
         ShoppingList saved = repository.save(list);
         activityRecordService.record(householdId, "shopping_list_created",
                 "Criou a lista de compras " + request.title());
@@ -43,6 +43,9 @@ public class ShoppingListService {
     public ShoppingListResponse rename(Integer householdId, String id, ShoppingListRequest request) {
         ShoppingList list = findOwned(householdId, id);
         list.setTitle(request.title());
+        if (request.date() != null) {
+            list.setDate(request.date());
+        }
         ShoppingList saved = repository.save(list);
         activityRecordService.record(householdId, "shopping_list_renamed",
                 "Renomeou uma lista de compras para " + request.title());

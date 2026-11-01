@@ -11,6 +11,7 @@ import com.example.nexuscore.dto.stock.StockItemUpdateRequest;
 import com.example.nexuscore.exception.ForbiddenException;
 import com.example.nexuscore.exception.NotFoundException;
 import com.example.nexuscore.mapper.StockMapper;
+import com.example.nexuscore.model.Address;
 import com.example.nexuscore.model.Category;
 import com.example.nexuscore.model.Food;
 import com.example.nexuscore.model.PantryItem;
@@ -23,6 +24,8 @@ import com.example.nexuscore.repository.PantryProductSettingRepository;
 import com.example.nexuscore.repository.ProfileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -103,18 +106,42 @@ public class StockService {
 
     @Transactional
     public StockItemResponse registerFood(Integer profileId, FoodRegistrationRequest request) {
+        Profile profile = profileRepository.getReferenceById(profileId);
+        StockItemResponse response = StockMapper.toResponse(saveFoodRegistration(profile, request));
+        recordFoodRegistration(profileId, profile.getAddress(), response);
+        return response;
+    }
+
+    @Transactional
+    public List<StockItemResponse> registerFoods(Integer profileId, List<FoodRegistrationRequest> requests) {
+        Profile profile = profileRepository.getReferenceById(profileId);
+        List<StockItemResponse> responses = requests.stream()
+                .map(request -> StockMapper.toResponse(saveFoodRegistration(profile, request)))
+                .toList();
+        Address address = profile.getAddress();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                responses.forEach(response -> recordFoodRegistration(profileId, address, response));
+            }
+        });
+        return responses;
+    }
+
+    private PantryItem saveFoodRegistration(Profile profile, FoodRegistrationRequest request) {
         Food food = foodRepository.findByGtin(request.gtin())
                 .orElseGet(() -> createFoodFromRegistration(request));
         if (food.getFoodImageUrl() == null && request.foodImageUrl() != null) {
             food.setFoodImageUrl(request.foodImageUrl());
         }
-        Profile profile = profileRepository.getReferenceById(profileId);
         PantryItem item = new PantryItem(food, profile, request.quantity(), request.expiryDate());
-        PantryItem saved = pantryItemRepository.save(item);
-        rankingService.recordRegistered(saved.getId(), food.getId(), profile.getAddress());
+        return pantryItemRepository.save(item);
+    }
+
+    private void recordFoodRegistration(Integer profileId, Address address, StockItemResponse response) {
+        rankingService.recordRegistered(response.id(), response.foodId(), address);
         activityRecordService.record(profileId, "stock_item_added",
-                "Adicionou " + request.quantity() + " unidade(s) de " + food.getName() + " ao estoque");
-        return StockMapper.toResponse(saved);
+                "Adicionou " + response.quantity() + " unidade(s) de " + response.foodName() + " ao estoque");
     }
 
     private Food createFoodFromRegistration(FoodRegistrationRequest request) {
@@ -139,7 +166,7 @@ public class StockService {
         }
         if (request.expiryDate() != null) {
             item.setExpiryDate(request.expiryDate());
-            if (request.expiryDate().isBefore(LocalDate.now())) {
+            if (item.getQuantity() > 0 && request.expiryDate().isBefore(LocalDate.now())) {
                 rankingService.recordExpired(item.getId(), item.getFood().getId(),
                         item.getProfile().getAddress());
             }
@@ -153,7 +180,8 @@ public class StockService {
     @Transactional
     public void remove(Integer profileId, Integer itemId) {
         PantryItem item = findOwnedItem(profileId, itemId);
-        pantryItemRepository.delete(item);
+        item.setQuantity(0);
+        pantryItemRepository.save(item);
         activityRecordService.record(profileId, "stock_item_removed",
                 "Removeu " + item.getFood().getName() + " do estoque");
     }
@@ -174,7 +202,7 @@ public class StockService {
     }
 
     private PantryItem findOwnedItem(Integer profileId, Integer itemId) {
-        PantryItem item = pantryItemRepository.findById(itemId)
+        PantryItem item = pantryItemRepository.findByIdForUpdate(itemId)
                 .orElseThrow(() -> new NotFoundException("Item de estoque nao encontrado: " + itemId));
         if (!item.getProfile().getId().equals(profileId)) {
             throw new ForbiddenException("Item de estoque nao pertence ao perfil autenticado");

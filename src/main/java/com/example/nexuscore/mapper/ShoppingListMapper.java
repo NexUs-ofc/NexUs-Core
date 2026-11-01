@@ -13,7 +13,7 @@ public final class ShoppingListMapper {
                 list.getId(),
                 list.getHouseholdId(),
                 list.getTitle(),
-                list.getEventId(),
+                list.getDate(),
                 list.getArrayList().stream()
                         .map(item -> new ShoppingListItemResponse(
                                 item.getId(), item.getFoodId(), item.getName(),
