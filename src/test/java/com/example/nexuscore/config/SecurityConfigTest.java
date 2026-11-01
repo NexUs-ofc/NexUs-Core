@@ -1,6 +1,6 @@
 package com.example.nexuscore.config;
 
-import com.example.nexuscore.geo.NominatimGeocodingService;
+import com.example.nexuscore.geo.GeocodingService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,8 +15,10 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -24,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(properties = "CORS_ALLOWED_ORIGINS=https://frontend.example.com, http://localhost:3000")
 @AutoConfigureMockMvc
-@MockitoBean(types = NominatimGeocodingService.class)
+@MockitoBean(types = GeocodingService.class)
 class SecurityConfigTest {
 
     @Autowired
@@ -38,13 +40,56 @@ class SecurityConfigTest {
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.info.title").value("NexUs Core API"));
+                .andExpect(jsonPath("$.info.title").value("NexUs Core API"))
+                .andExpect(jsonPath("$.paths['/api/events']").doesNotExist())
+                .andExpect(jsonPath("$.paths['/api/events/{id}']").doesNotExist())
+                .andExpect(jsonPath("$.paths['/internal/notifications/events']").exists());
+    }
+
+    @Test
+    void documentsBearerAuthenticationForApplicationEndpoints() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.components.securitySchemes.BearerAuth.type").value("http"))
+                .andExpect(jsonPath("$.components.securitySchemes.BearerAuth.scheme").value("bearer"))
+                .andExpect(jsonPath("$.components.securitySchemes.BearerAuth.bearerFormat").value("JWT"))
+                .andExpect(jsonPath("$.security[0].BearerAuth").isArray())
+                .andExpect(jsonPath("$.paths['/api/profile'].get.security").doesNotExist());
+    }
+
+    @Test
+    void documentsDedicatedKeysInsteadOfBearerForInternalAndAdminEndpoints() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.components.securitySchemes.NotifyTokenAuth.type").value("apiKey"))
+                .andExpect(jsonPath("$.components.securitySchemes.NotifyTokenAuth.in").value("header"))
+                .andExpect(jsonPath("$.components.securitySchemes.NotifyTokenAuth.name").value("X-Notify-Token"))
+                .andExpect(jsonPath("$.components.securitySchemes.AdminKeyAuth.type").value("apiKey"))
+                .andExpect(jsonPath("$.components.securitySchemes.AdminKeyAuth.in").value("header"))
+                .andExpect(jsonPath("$.components.securitySchemes.AdminKeyAuth.name").value("X-Admin-Key"))
+                .andExpect(jsonPath("$.paths['/internal/notifications/products'].get.security.length()").value(1))
+                .andExpect(jsonPath("$.paths['/internal/notifications/products'].get.security[0].NotifyTokenAuth")
+                        .isArray())
+                .andExpect(jsonPath("$.paths['/internal/notifications/events'].get.security[0].NotifyTokenAuth")
+                        .isArray())
+                .andExpect(jsonPath("$.paths['/internal/notifications/shopping-lists'].get.security[0].NotifyTokenAuth")
+                        .isArray())
+                .andExpect(jsonPath("$.paths['/admin/session'].get.security.length()").value(1))
+                .andExpect(jsonPath("$.paths['/admin/session'].get.security[0].AdminKeyAuth").isArray());
     }
 
     @Test
     void keepsApplicationEndpointsProtected() throws Exception {
         mockMvc.perform(get("/api/profile"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void keepsImageEndpointsProtected() throws Exception {
+        mockMvc.perform(put("/api/profile/image")).andExpect(status().isUnauthorized());
+        mockMvc.perform(delete("/api/profile/image")).andExpect(status().isUnauthorized());
+        mockMvc.perform(put("/api/companies/me/stores/1/image")).andExpect(status().isUnauthorized());
+        mockMvc.perform(delete("/api/companies/me/stores/1/image")).andExpect(status().isUnauthorized());
     }
 
     @Test

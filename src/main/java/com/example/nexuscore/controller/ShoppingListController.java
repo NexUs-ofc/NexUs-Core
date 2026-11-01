@@ -66,7 +66,7 @@ public class ShoppingListController {
 
     @PatchMapping("/{id}/items/{itemId}")
     public ShoppingListResponse updateItem(@PathVariable String id, @PathVariable String itemId,
-                                            @RequestBody ShoppingListItemUpdateRequest request) {
+                                            @Valid @RequestBody ShoppingListItemUpdateRequest request) {
         return service.updateItem(currentProfile.profileId().intValue(), id, itemId, request);
     }
 

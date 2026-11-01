@@ -1,6 +1,8 @@
 package com.example.nexuscore.dto.shoppinglist;
 
+import jakarta.validation.constraints.Positive;
+
 public record ShoppingListItemUpdateRequest(
-        Double quantity,
+        @Positive Double quantity,
         Boolean checked
 ) {}

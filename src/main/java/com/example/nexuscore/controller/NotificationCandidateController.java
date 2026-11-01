@@ -5,7 +5,9 @@ import com.example.nexuscore.dto.notification.NearbyStoreCandidate;
 import com.example.nexuscore.dto.notification.NewStoreCandidate;
 import com.example.nexuscore.dto.notification.NotificationCandidatePage;
 import com.example.nexuscore.dto.notification.ProductNotificationCandidate;
+import com.example.nexuscore.dto.notification.ShoppingListNotificationCandidate;
 import com.example.nexuscore.service.NotificationCandidateService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +17,7 @@ import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/internal/notifications")
+@SecurityRequirement(name = "NotifyTokenAuth")
 public class NotificationCandidateController {
 
     private final NotificationCandidateService service;
@@ -39,6 +42,15 @@ public class NotificationCandidateController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "100") int size) {
         return service.events(from, to, page, size);
+    }
+
+    @GetMapping("/shopping-lists")
+    public NotificationCandidatePage<ShoppingListNotificationCandidate> shoppingLists(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        return service.shoppingLists(from, to, page, size);
     }
 
     @GetMapping("/nearby-stores")

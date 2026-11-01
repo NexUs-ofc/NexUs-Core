@@ -38,7 +38,6 @@ Enum auth_provider_enum {
 
 Enum notification_type_enum {
   PRODUCT_EXPIRING
-  UPCOMING_EVENT
 }
 
 Table postgres.address {
@@ -124,7 +123,6 @@ Table postgres.plan {
   id integer [pk, increment]
   plan_price decimal(10,2) [not null]
   plan_name varchar(80) [not null, unique]
-  store_limit integer [not null]
   description text
   is_active boolean [not null]
   created_at timestamp [not null]
@@ -162,23 +160,11 @@ Table postgres.payment {
   paid_at timestamp
 }
 
-Table mongo.events {
-  _id objectId [pk]
-  household_id integer [not null, note: 'Referência lógica a postgres.profile.id']
-  title string
-  description string
-  date datetime
-  duration integer
-  local string
-  qtd_people integer
-  recipes json [note: 'Lista embutida com recipe_id, título e ingredientes usados no evento']
-}
-
 Table mongo.shopping_list {
   _id string [pk]
   household_id integer [note: 'Referência lógica a postgres.profile.id']
   title string
-  event_id string [note: 'Referência lógica a mongo.events._id']
+  date date [note: 'Opcional; ausente no documento quando não informada']
   array_list json [note: 'Lista embutida de itens de compra']
 }
 
