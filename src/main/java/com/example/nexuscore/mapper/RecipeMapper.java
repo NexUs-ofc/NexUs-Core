@@ -28,7 +28,7 @@ public final class RecipeMapper {
                                 ingredient.getRequiredQuantity(),
                                 ingredient.getMandatory(),
                                 ingredient.getPossibleSubstitutes(),
-                                ingredient.getFoodId() == null ? null : foodNames.get(ingredient.getFoodId())))
+                                foodName(ingredient, foodNames)))
                         .toList(),
                 (recipe.getSteps() == null ? List.<RecipeStep>of() : recipe.getSteps()).stream()
                         .filter(Objects::nonNull)
@@ -36,5 +36,12 @@ public final class RecipeMapper {
                         .toList(),
                 recipe.getInstructions(),
                 recipe.getCreatedBy());
+    }
+
+    private static String foodName(RecipeIngredient ingredient, Map<Integer, String> foodNames) {
+        if (ingredient.getName() != null && !ingredient.getName().isBlank()) {
+            return ingredient.getName().trim();
+        }
+        return ingredient.getFoodId() == null ? null : foodNames.get(ingredient.getFoodId());
     }
 }
