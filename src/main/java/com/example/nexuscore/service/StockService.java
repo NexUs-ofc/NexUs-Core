@@ -191,6 +191,14 @@ public class StockService {
                                                               MinimumQuantityRequest request) {
         Food food = foodRepository.findById(foodId)
                 .orElseThrow(() -> new NotFoundException("Alimento nao encontrado: " + foodId));
+        if (request.minimumQuantity() == 0) {
+            settingRepository.findByProfileIdAndFoodId(profileId, foodId).ifPresent(setting -> {
+                settingRepository.delete(setting);
+                activityRecordService.record(profileId, "minimum_stock_quantity_changed",
+                        "Removeu a configuração de estoque mínimo de " + food.getName());
+            });
+            return new PantryProductSettingResponse(food.getId(), food.getName(), food.getFoodImageUrl(), 0);
+        }
         PantryProductSetting setting = settingRepository.findByProfileIdAndFoodId(profileId, foodId)
                 .orElseGet(() -> new PantryProductSetting(food,
                         profileRepository.getReferenceById(profileId), request.minimumQuantity()));
