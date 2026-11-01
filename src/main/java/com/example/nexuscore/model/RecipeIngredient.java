@@ -8,6 +8,8 @@ public class RecipeIngredient {
     @Field("food_id")
     private Integer foodId;
 
+    private String name;
+
     @Field("required_quantity")
     private String requiredQuantity;
 
@@ -21,6 +23,10 @@ public class RecipeIngredient {
 
     public Integer getFoodId() {
         return foodId;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public String getRequiredQuantity() {

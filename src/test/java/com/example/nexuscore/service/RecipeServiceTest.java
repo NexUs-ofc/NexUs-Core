@@ -15,6 +15,9 @@ import com.example.nexuscore.repository.RecipeAccountRepository;
 import com.example.nexuscore.repository.RecipeRepository;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
@@ -137,6 +140,51 @@ class RecipeServiceTest {
         assertEquals(List.of(new RecipeStepResponse(null, "Tempere o frango."),
                         new RecipeStepResponse("Cozinhar", null)),
                 service.getSaved(12, ID.toHexString()).steps());
+    }
+
+    @Test
+    void returnsStoredIngredientNamesWithoutFoodIdsInListAndDetails() {
+        RecipeIngredient chicken = ingredient(null, "500 g");
+        when(chicken.getName()).thenReturn("  Peito de frango  ");
+        Recipe recipe = recipe(ID, "Frango ao molho", List.of(chicken));
+        when(recipes.findByIdAndAccountId(ID, 12)).thenReturn(Optional.of(recipe));
+        when(recipes.findByAccountIdOrIdIn(12, List.of())).thenReturn(List.of(recipe));
+
+        RecipeResponse details = service.getSaved(12, ID.toHexString());
+
+        assertEquals(new RecipeIngredientResponse(null, "500 g", true, List.of(7), "Peito de frango"),
+                details.ingredients().get(0));
+        assertEquals(List.of(details), service.listSaved(12));
+        verifyNoInteractions(foods, activities);
+    }
+
+    @Test
+    void prefersStoredIngredientNamesOverCatalogNames() {
+        RecipeIngredient chicken = ingredient(5, "500 g");
+        when(chicken.getName()).thenReturn("Peito de frango em cubos");
+        Recipe recipe = recipe(ID, "Frango ao molho", List.of(chicken));
+        when(recipes.findByIdAndAccountId(ID, 12)).thenReturn(Optional.of(recipe));
+        Food catalogChicken = food(5, "Frango");
+        when(foods.findAllById(List.of(5))).thenReturn(List.of(catalogChicken));
+
+        RecipeIngredientResponse ingredient = service.getSaved(12, ID.toHexString()).ingredients().get(0);
+
+        assertEquals("Peito de frango em cubos", ingredient.foodName());
+        assertEquals(5, ingredient.foodId());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = "  ")
+    void resolvesCatalogNamesWhenStoredIngredientNamesAreMissingOrBlank(String name) {
+        RecipeIngredient chicken = ingredient(5, "500 g");
+        when(chicken.getName()).thenReturn(name);
+        Recipe recipe = recipe(ID, "Frango ao molho", List.of(chicken));
+        when(recipes.findByIdAndAccountId(ID, 12)).thenReturn(Optional.of(recipe));
+        Food catalogChicken = food(5, "Peito de frango");
+        when(foods.findAllById(List.of(5))).thenReturn(List.of(catalogChicken));
+
+        assertEquals("Peito de frango", service.getSaved(12, ID.toHexString()).ingredients().get(0).foodName());
     }
 
     @Test
