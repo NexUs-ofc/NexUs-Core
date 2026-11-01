@@ -22,9 +22,6 @@ public class Plan {
     @Column(name = "plan_name", nullable = false, unique = true, length = 80)
     private String planName;
 
-    @Column(name = "store_limit", nullable = false)
-    private Integer storeLimit;
-
     protected Plan() {
     }
 
@@ -38,9 +35,5 @@ public class Plan {
 
     public String getPlanName() {
         return planName;
-    }
-
-    public Integer getStoreLimit() {
-        return storeLimit;
     }
 }

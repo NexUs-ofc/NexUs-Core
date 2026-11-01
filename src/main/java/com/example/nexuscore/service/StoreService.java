@@ -84,11 +84,6 @@ public class StoreService {
         if (profileRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("Email ja cadastrado");
         }
-        long storeCount = repository.countByCompanyId(company.getId());
-        if (storeCount >= company.getPlan().getStoreLimit()) {
-            throw new IllegalArgumentException("Limite de lojas do plano atingido");
-        }
-
         Address address = saveAddress(null, request.address());
         Profile storeProfile = profileRepository.save(new Profile(
                 address, request.email(), request.name(), null,

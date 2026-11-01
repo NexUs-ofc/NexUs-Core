@@ -18,7 +18,6 @@ public final class CompanyMapper {
                 plan.getId(),
                 plan.getPlanName(),
                 plan.getPlanPrice(),
-                plan.getStoreLimit(),
                 storeCount);
     }
 }

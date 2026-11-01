@@ -8,6 +8,5 @@ public record CompanyResponse(
         Integer planId,
         String planName,
         BigDecimal planPrice,
-        Integer storeLimit,
         Long storeCount
 ) {}

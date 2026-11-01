@@ -124,7 +124,6 @@ Table postgres.plan {
   id integer [pk, increment]
   plan_price decimal(10,2) [not null]
   plan_name varchar(80) [not null, unique]
-  store_limit integer [not null]
   description text
   is_active boolean [not null]
   created_at timestamp [not null]
