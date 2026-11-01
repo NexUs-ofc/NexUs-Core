@@ -3,6 +3,7 @@ package com.example.nexuscore.controller;
 import com.example.nexuscore.config.CoreConfiguration;
 import com.example.nexuscore.config.NotificationIntegrationSecurityConfig;
 import com.example.nexuscore.config.SecurityConfig;
+import com.example.nexuscore.dto.notification.EventNotificationCandidate;
 import com.example.nexuscore.dto.notification.NearbyStoreCandidate;
 import com.example.nexuscore.dto.notification.NearbyStoreOption;
 import com.example.nexuscore.dto.notification.NewStoreCandidate;
@@ -29,6 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -263,11 +265,36 @@ class NotificationCandidateControllerTest {
     }
 
     @Test
-    void rejectsRemovedEventNotificationRoute() throws Exception {
+    void returnsAiEventsUsingTheExistingNotifyContract() throws Exception {
+        when(service.events(FROM, TO, 1, 2)).thenReturn(new NotificationCandidatePage<>(List.of(
+                new EventNotificationCandidate(12, "507f1f77bcf86cd799439011", "Jantar",
+                        LocalDateTime.of(2026, 10, 15, 19, 30))), true));
         mockMvc.perform(get("/internal/notifications/events").header(NotifyTokenFilter.HEADER_NAME, TOKEN)
-                        .param("from", FROM.toString()).param("to", TO.toString()))
-                .andExpect(status().isForbidden());
+                        .param("from", FROM.toString()).param("to", TO.toString())
+                        .param("page", "1").param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].profileId").value(12))
+                .andExpect(jsonPath("$.content[0].eventId").value("507f1f77bcf86cd799439011"))
+                .andExpect(jsonPath("$.content[0].title").value("Jantar"))
+                .andExpect(jsonPath("$.content[0].date").value("2026-10-15T19:30:00"))
+                .andExpect(jsonPath("$.hasNext").value(true));
+        verifyNoInteractions(jwtDecoder);
+    }
 
-        verifyNoInteractions(service);
+    @Test
+    void protectsAiEventCandidatesAndRejectsWritesAndInvalidDates() throws Exception {
+        String route = "/internal/notifications/events";
+        mockMvc.perform(get(route).param("from", FROM.toString()).param("to", TO.toString()))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get(route).header(NotifyTokenFilter.HEADER_NAME, "wrong-token"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get(route).header("Authorization", "Bearer user-token"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post(route).header(NotifyTokenFilter.HEADER_NAME, TOKEN))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get(route).header(NotifyTokenFilter.HEADER_NAME, TOKEN)
+                        .param("from", "invalid").param("to", TO.toString()))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(service, jwtDecoder);
     }
 }

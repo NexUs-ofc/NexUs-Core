@@ -7,6 +7,7 @@ import com.example.nexuscore.model.ProfileStatus;
 import com.example.nexuscore.model.ProfileType;
 import com.example.nexuscore.model.ShoppingList;
 import com.example.nexuscore.model.ShoppingListItem;
+import com.example.nexuscore.repository.AiEventNotificationRepository;
 import com.example.nexuscore.repository.PantryItemRepository;
 import com.example.nexuscore.repository.ProfileRepository;
 import com.example.nexuscore.repository.ShoppingListRepository;
@@ -35,7 +36,7 @@ class ShoppingListNotificationCandidateServiceTest {
     private final PantryItemRepository pantry = mock(PantryItemRepository.class);
     private final StoreRepository stores = mock(StoreRepository.class);
     private final NotificationCandidateService service =
-            new NotificationCandidateService(pantry, profiles, stores, lists);
+            new NotificationCandidateService(pantry, profiles, stores, lists, mock(AiEventNotificationRepository.class));
 
     @Test
     void includesCompletePartialUncheckedAndEmptyListsWithTheirOwnTargetIds() {

@@ -23,7 +23,7 @@ public class NotificationIntegrationSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET,
-                                "/internal/notifications/products",
+                                "/internal/notifications/products", "/internal/notifications/events",
                                 "/internal/notifications/shopping-lists",
                                 "/internal/notifications/nearby-stores", "/internal/notifications/new-stores")
                         .hasAuthority(NotifyTokenFilter.AUTHORITY)
