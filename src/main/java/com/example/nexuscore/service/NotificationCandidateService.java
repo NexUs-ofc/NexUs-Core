@@ -1,5 +1,6 @@
 package com.example.nexuscore.service;
 
+import com.example.nexuscore.dto.notification.EventNotificationCandidate;
 import com.example.nexuscore.dto.notification.NearbyHouseholdProjection;
 import com.example.nexuscore.dto.notification.NearbyStoreCandidate;
 import com.example.nexuscore.dto.notification.NearbyStoreOption;
@@ -9,11 +10,13 @@ import com.example.nexuscore.dto.notification.NewStoreProjection;
 import com.example.nexuscore.dto.notification.NotificationCandidatePage;
 import com.example.nexuscore.dto.notification.ProductNotificationCandidate;
 import com.example.nexuscore.dto.notification.ShoppingListNotificationCandidate;
+import com.example.nexuscore.model.AiEventNotificationSource;
 import com.example.nexuscore.model.Profile;
 import com.example.nexuscore.model.ProfileStatus;
 import com.example.nexuscore.model.ProfileType;
 import com.example.nexuscore.model.ShoppingList;
 import com.example.nexuscore.model.ShoppingListItem;
+import com.example.nexuscore.repository.AiEventNotificationRepository;
 import com.example.nexuscore.repository.PantryItemRepository;
 import com.example.nexuscore.repository.ProfileRepository;
 import com.example.nexuscore.repository.ShoppingListRepository;
@@ -23,6 +26,8 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -42,15 +47,18 @@ public class NotificationCandidateService {
     private final ProfileRepository profileRepository;
     private final StoreRepository storeRepository;
     private final ShoppingListRepository shoppingListRepository;
+    private final AiEventNotificationRepository eventRepository;
 
     public NotificationCandidateService(PantryItemRepository pantryItemRepository,
                                         ProfileRepository profileRepository,
                                         StoreRepository storeRepository,
-                                        ShoppingListRepository shoppingListRepository) {
+                                        ShoppingListRepository shoppingListRepository,
+                                        AiEventNotificationRepository eventRepository) {
         this.pantryItemRepository = pantryItemRepository;
         this.profileRepository = profileRepository;
         this.storeRepository = storeRepository;
         this.shoppingListRepository = shoppingListRepository;
+        this.eventRepository = eventRepository;
     }
 
     public NotificationCandidatePage<ProductNotificationCandidate> products(
@@ -63,6 +71,25 @@ public class NotificationCandidateService {
         return new NotificationCandidatePage<>(candidates.getContent(), candidates.hasNext());
     }
 
+    public NotificationCandidatePage<EventNotificationCandidate> events(
+            LocalDate from, LocalDate to, int page, int size) {
+        validateRequest(from, to, page, size);
+        Slice<AiEventNotificationSource> events = eventRepository.findNotificationCandidates(
+                from.atStartOfDay().toInstant(ZoneOffset.UTC),
+                to.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC),
+                PageRequest.of(page, size, Sort.by("date", "id").ascending()));
+        List<Integer> profileIds = events.getContent().stream().map(AiEventNotificationSource::getHouseholdId)
+                .filter(Objects::nonNull).distinct().toList();
+        Set<Integer> activeHouseholdIds = activeHouseholdIds(profileIds);
+        List<EventNotificationCandidate> content = events.getContent().stream()
+                .filter(event -> event.getHouseholdId() != null
+                        && activeHouseholdIds.contains(event.getHouseholdId()))
+                .map(event -> new EventNotificationCandidate(event.getHouseholdId(), event.getId(), event.getTitle(),
+                        LocalDateTime.ofInstant(event.getDate(), ZoneOffset.UTC)))
+                .toList();
+        return new NotificationCandidatePage<>(content, events.hasNext());
+    }
+
     public NotificationCandidatePage<ShoppingListNotificationCandidate> shoppingLists(
             LocalDate from, LocalDate to, int page, int size) {
         validateRequest(from, to, page, size);
@@ -70,10 +97,7 @@ public class NotificationCandidateService {
                 PageRequest.of(page, size, Sort.by("date", "id").ascending()));
         List<Integer> profileIds = lists.getContent().stream().map(ShoppingList::getHouseholdId)
                 .filter(Objects::nonNull).distinct().toList();
-        Set<Integer> activeHouseholdIds = profileIds.isEmpty() ? Set.of()
-                : profileRepository.findByIdInAndStatus(profileIds, ProfileStatus.ACTIVE).stream()
-                        .filter(profile -> profile.getType() == ProfileType.HOUSEHOLD)
-                        .map(Profile::getId).collect(Collectors.toSet());
+        Set<Integer> activeHouseholdIds = activeHouseholdIds(profileIds);
         List<ShoppingListNotificationCandidate> content = lists.getContent().stream()
                 .filter(list -> list.getHouseholdId() != null
                         && activeHouseholdIds.contains(list.getHouseholdId()))
@@ -117,6 +141,13 @@ public class NotificationCandidateService {
                     store.getCreatedAt().toLocalDate(), profileIds);
         }).toList();
         return new NotificationCandidatePage<>(content, stores.hasNext());
+    }
+
+    private Set<Integer> activeHouseholdIds(List<Integer> profileIds) {
+        return profileIds.isEmpty() ? Set.of()
+                : profileRepository.findByIdInAndStatus(profileIds, ProfileStatus.ACTIVE).stream()
+                        .filter(profile -> profile.getType() == ProfileType.HOUSEHOLD)
+                        .map(Profile::getId).collect(Collectors.toSet());
     }
 
     private void validateRequest(LocalDate from, LocalDate to, int page, int size) {

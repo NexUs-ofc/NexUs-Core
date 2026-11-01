@@ -43,7 +43,7 @@ class SecurityConfigTest {
                 .andExpect(jsonPath("$.info.title").value("NexUs Core API"))
                 .andExpect(jsonPath("$.paths['/api/events']").doesNotExist())
                 .andExpect(jsonPath("$.paths['/api/events/{id}']").doesNotExist())
-                .andExpect(jsonPath("$.paths['/internal/notifications/events']").doesNotExist());
+                .andExpect(jsonPath("$.paths['/internal/notifications/events']").exists());
     }
 
     @Test
@@ -69,6 +69,10 @@ class SecurityConfigTest {
                 .andExpect(jsonPath("$.components.securitySchemes.AdminKeyAuth.name").value("X-Admin-Key"))
                 .andExpect(jsonPath("$.paths['/internal/notifications/products'].get.security.length()").value(1))
                 .andExpect(jsonPath("$.paths['/internal/notifications/products'].get.security[0].NotifyTokenAuth")
+                        .isArray())
+                .andExpect(jsonPath("$.paths['/internal/notifications/events'].get.security[0].NotifyTokenAuth")
+                        .isArray())
+                .andExpect(jsonPath("$.paths['/internal/notifications/shopping-lists'].get.security[0].NotifyTokenAuth")
                         .isArray())
                 .andExpect(jsonPath("$.paths['/admin/session'].get.security.length()").value(1))
                 .andExpect(jsonPath("$.paths['/admin/session'].get.security[0].AdminKeyAuth").isArray());
