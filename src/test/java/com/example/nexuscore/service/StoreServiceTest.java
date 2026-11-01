@@ -9,7 +9,6 @@ import com.example.nexuscore.geo.GeoPoint;
 import com.example.nexuscore.geo.GeocodingService;
 import com.example.nexuscore.model.Address;
 import com.example.nexuscore.model.Company;
-import com.example.nexuscore.model.Plan;
 import com.example.nexuscore.model.Profile;
 import com.example.nexuscore.model.ProfileStatus;
 import com.example.nexuscore.model.ProfileType;
@@ -195,11 +194,8 @@ class StoreServiceTest {
 
     private Company configureCompany() {
         Company company = mock(Company.class);
-        Plan plan = mock(Plan.class);
         when(companyService.companyOf(12)).thenReturn(company);
         when(company.getId()).thenReturn(3);
-        when(company.getPlan()).thenReturn(plan);
-        when(plan.getStoreLimit()).thenReturn(2);
         return company;
     }
 
