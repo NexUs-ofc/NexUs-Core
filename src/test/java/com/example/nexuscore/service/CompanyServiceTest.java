@@ -2,6 +2,7 @@ package com.example.nexuscore.service;
 
 import com.example.nexuscore.dto.company.CompanyResponse;
 import com.example.nexuscore.dto.company.PlanChangeRequest;
+import com.example.nexuscore.exception.NotFoundException;
 import com.example.nexuscore.model.Company;
 import com.example.nexuscore.model.Plan;
 import com.example.nexuscore.model.Profile;
@@ -10,12 +11,16 @@ import com.example.nexuscore.repository.CompanyRepository;
 import com.example.nexuscore.repository.PlanRepository;
 import com.example.nexuscore.repository.ProfileRepository;
 import com.example.nexuscore.repository.StoreRepository;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -27,6 +32,21 @@ class CompanyServiceTest {
     private final StoreRepository stores = mock(StoreRepository.class);
     private final CompanyService service = new CompanyService(companies, plans, profiles, stores);
 
+    @Test
+    void doesNotChangeTheCompanyForAnUnavailablePlan() {
+        Profile profile = mock(Profile.class);
+        Company company = mock(Company.class);
+        when(profiles.findById(12)).thenReturn(Optional.of(profile));
+        when(profile.getType()).thenReturn(ProfileType.COMPANY);
+        when(companies.findByProfileId(12)).thenReturn(Optional.of(company));
+        when(plans.findByIdAndActiveTrue(99)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> service.changePlan(12, new PlanChangeRequest(99)));
+
+        verify(company, never()).setPlan(any());
+        verify(companies, never()).save(any());
+    }
+
     @ParameterizedTest
     @ValueSource(longs = {0, 100, 10000})
     void changesPlanRegardlessOfStoreCount(long storeCount) {
@@ -37,7 +57,7 @@ class CompanyServiceTest {
         when(profile.getType()).thenReturn(ProfileType.COMPANY);
         when(companies.findByProfileId(12)).thenReturn(Optional.of(company));
         when(company.getId()).thenReturn(1);
-        when(plans.findById(2)).thenReturn(Optional.of(plan));
+        when(plans.findByIdAndActiveTrue(2)).thenReturn(Optional.of(plan));
         when(stores.countByCompanyId(1)).thenReturn(storeCount);
         when(companies.save(company)).thenReturn(company);
         when(company.getPlan()).thenReturn(plan);

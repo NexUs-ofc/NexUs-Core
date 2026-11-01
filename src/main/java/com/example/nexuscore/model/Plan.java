@@ -22,6 +22,12 @@ public class Plan {
     @Column(name = "plan_name", nullable = false, unique = true, length = 80)
     private String planName;
 
+    @Column(columnDefinition = "text")
+    private String description;
+
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
+
     protected Plan() {
     }
 
@@ -35,5 +41,13 @@ public class Plan {
 
     public String getPlanName() {
         return planName;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public boolean isActive() {
+        return active;
     }
 }

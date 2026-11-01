@@ -50,6 +50,11 @@ public class CompanyController {
         this.images = images;
     }
 
+    @GetMapping("/me")
+    public CompanyResponse getCompany() {
+        return companyService.get(currentProfile.profileId().intValue());
+    }
+
     @PatchMapping("/me/plan")
     public CompanyResponse changePlan(@Valid @RequestBody PlanChangeRequest request) {
         return companyService.changePlan(currentProfile.profileId().intValue(), request);
