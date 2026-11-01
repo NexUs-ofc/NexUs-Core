@@ -39,10 +39,6 @@ public class CompanyService {
         Plan plan = plans.findById(request.planId())
                 .orElseThrow(() -> new NotFoundException("Plano nao encontrado: " + request.planId()));
         long storeCount = stores.countByCompanyId(company.getId());
-        if (storeCount > plan.getStoreLimit()) {
-            throw new IllegalArgumentException(
-                    "Plano nao comporta as " + storeCount + " lojas da empresa");
-        }
         company.setPlan(plan);
         return CompanyMapper.toResponse(companies.save(company), storeCount);
     }

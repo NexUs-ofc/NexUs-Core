@@ -9,7 +9,6 @@ import com.example.nexuscore.geo.GeoPoint;
 import com.example.nexuscore.geo.GeocodingService;
 import com.example.nexuscore.model.Address;
 import com.example.nexuscore.model.Company;
-import com.example.nexuscore.model.Plan;
 import com.example.nexuscore.model.Profile;
 import com.example.nexuscore.model.ProfileStatus;
 import com.example.nexuscore.model.ProfileType;
@@ -45,6 +44,28 @@ class StoreServiceTest {
     private final GeocodingService geocodingService = mock(GeocodingService.class);
     private final StoreService service = new StoreService(
             repository, profileRepository, addressRepository, companyService, geocodingService);
+
+    @Test
+    void createsCompanyStoreWithoutConsultingPlanOrStoreCount() {
+        Company company = mock(Company.class);
+        StoreCreateRequest request = new StoreCreateRequest(
+                "12345678000190", "loja@example.com", "Nova loja", List.of(),
+                new AddressRequest("Centro", "Rua A", "10", "01001000", "Sao Paulo", "SP"),
+                null, null);
+        when(companyService.companyOf(12)).thenReturn(company);
+        when(geocodingService.geocode("Rua A", "10", "Centro", "Sao Paulo", "SP"))
+                .thenReturn(Optional.of(new GeoPoint(new BigDecimal("-23.550520"),
+                        new BigDecimal("-46.633308"))));
+        when(addressRepository.save(any(Address.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(profileRepository.save(any(Profile.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(repository.save(any(Store.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertEquals(request.cnpj(), service.createCompanyStore(12, request).cnpj());
+
+        verify(repository).save(any(Store.class));
+        verify(repository, never()).countByCompanyId(any());
+        verify(company, never()).getPlan();
+    }
 
     @ParameterizedTest
     @NullSource
@@ -173,11 +194,8 @@ class StoreServiceTest {
 
     private Company configureCompany() {
         Company company = mock(Company.class);
-        Plan plan = mock(Plan.class);
         when(companyService.companyOf(12)).thenReturn(company);
         when(company.getId()).thenReturn(3);
-        when(company.getPlan()).thenReturn(plan);
-        when(plan.getStoreLimit()).thenReturn(2);
         return company;
     }
 
