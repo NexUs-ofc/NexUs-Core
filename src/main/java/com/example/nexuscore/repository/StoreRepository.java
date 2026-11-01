@@ -150,6 +150,7 @@ public interface StoreRepository extends JpaRepository<Store, Integer> {
                     a.street as street,
                     a.number as number,
                     a.neighborhood as neighborhood,
+                    a.cep as cep,
                     a.city as city,
                     a.state as state,
                     a.latitude as latitude,

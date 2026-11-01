@@ -11,6 +11,7 @@ public interface StoreDistanceProjection {
     String getStreet();
     String getNumber();
     String getNeighborhood();
+    String getCep();
     String getCity();
     String getState();
     BigDecimal getLatitude();
