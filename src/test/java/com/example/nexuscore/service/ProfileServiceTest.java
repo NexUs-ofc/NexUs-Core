@@ -8,6 +8,7 @@ import com.example.nexuscore.model.Address;
 import com.example.nexuscore.model.Profile;
 import com.example.nexuscore.model.ProfileType;
 import com.example.nexuscore.repository.AddressRepository;
+import com.example.nexuscore.repository.CompanyRepository;
 import com.example.nexuscore.repository.ProfileRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -33,13 +34,13 @@ class ProfileServiceTest {
     private final AddressRepository addresses = mock(AddressRepository.class);
     private final GeocodingService geocoding = mock(GeocodingService.class);
     private final ProfileService service = new ProfileService(profiles, addresses, geocoding,
-            mock(ProfileRestrictionsCache.class));
+            mock(ProfileRestrictionsCache.class), mock(CompanyRepository.class));
 
     @Test
     void updatingProfileDetailsPreservesExistingImageUrl() {
         ProfileRepository profiles = mock(ProfileRepository.class);
         ProfileService service = new ProfileService(profiles, mock(AddressRepository.class),
-                mock(GeocodingService.class), mock(ProfileRestrictionsCache.class));
+                mock(GeocodingService.class), mock(ProfileRestrictionsCache.class), mock(CompanyRepository.class));
         Profile profile = new Profile(null, "company@example.com", "Company", "https://example.com/current.png",
                 ProfileType.COMPANY, Set.of());
         when(profiles.findById(12)).thenReturn(Optional.of(profile));

@@ -1,23 +1,29 @@
 package com.example.nexuscore.config;
 
+import com.example.nexuscore.dto.plan.PlanResponse;
 import com.example.nexuscore.geo.GeocodingService;
+import com.example.nexuscore.service.PlanService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.mock.web.MockHttpServletRequest;
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -31,6 +37,28 @@ class SecurityConfigTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private PlanService plans;
+
+    @Test
+    void allowsThePlanCatalogWithoutAuthentication() throws Exception {
+        when(plans.list()).thenReturn(List.of(new PlanResponse(47, "Plano do banco",
+                new BigDecimal("149.90"), "Descrição do banco")));
+
+        mockMvc.perform(get("/api/plans"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(47))
+                .andExpect(jsonPath("$[0].planName").value("Plano do banco"))
+                .andExpect(jsonPath("$[0].planPrice").value(149.90));
+    }
+
+    @Test
+    void keepsCompanyDetailsAndPlanChangesProtected() throws Exception {
+        mockMvc.perform(get("/api/companies/me")).andExpect(status().isUnauthorized());
+        mockMvc.perform(patch("/api/companies/me/plan")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/plans")).andExpect(status().isUnauthorized());
+    }
 
     @Test
     void allowsSwaggerWithoutAuthentication() throws Exception {

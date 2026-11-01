@@ -41,8 +41,8 @@ public class CompanyService {
     @Transactional
     public CompanyResponse changePlan(Integer profileId, PlanChangeRequest request) {
         Company company = companyOf(profileId);
-        Plan plan = plans.findById(request.planId())
-                .orElseThrow(() -> new NotFoundException("Plano nao encontrado: " + request.planId()));
+        Plan plan = plans.findByIdAndActiveTrue(request.planId())
+                .orElseThrow(() -> new NotFoundException("Plano indisponivel para contratacao: " + request.planId()));
         long storeCount = stores.countByCompanyId(company.getId());
         company.setPlan(plan);
         return CompanyMapper.toResponse(companies.save(company), storeCount);
