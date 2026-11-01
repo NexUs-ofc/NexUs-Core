@@ -18,6 +18,7 @@ public final class StoreMapper {
                 address == null ? null : address.getStreet(),
                 address == null ? null : address.getNumber(),
                 address == null ? null : address.getNeighborhood(),
+                address == null ? null : address.getCep(),
                 address == null ? null : address.getCity(),
                 address == null ? null : address.getState(),
                 address == null ? null : address.getLatitude(),
@@ -29,6 +30,7 @@ public final class StoreMapper {
         return new StoreResponse(
                 projection.getId(), projection.getName(), projection.getCnpj(), projection.getStoreImageUrl(),
                 projection.getStreet(), projection.getNumber(), projection.getNeighborhood(),
+                projection.getCep(),
                 projection.getCity(), projection.getState(), projection.getLatitude(), projection.getLongitude(),
                 projection.getDistanceKm(), projection.getOpeningTime(), projection.getClosingTime());
     }

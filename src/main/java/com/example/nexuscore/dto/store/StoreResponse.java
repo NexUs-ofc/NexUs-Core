@@ -12,6 +12,7 @@ public record StoreResponse(
         String street,
         String number,
         String neighborhood,
+        String cep,
         String city,
         String state,
         BigDecimal latitude,
