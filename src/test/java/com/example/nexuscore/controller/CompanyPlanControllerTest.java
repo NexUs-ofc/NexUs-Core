@@ -48,6 +48,7 @@ class CompanyPlanControllerTest {
         mvc.perform(get("/api/companies/me").param("profileId", "999"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(31))
+                .andExpect(jsonPath("$.cnpj").value("12345678000195"))
                 .andExpect(jsonPath("$.planId").value(2))
                 .andExpect(jsonPath("$.planName").value("Enterprise"))
                 .andExpect(jsonPath("$.planPrice").value(659.99));

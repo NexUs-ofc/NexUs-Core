@@ -11,7 +11,7 @@ public final class ProfileMapper {
     private ProfileMapper() {
     }
 
-    public static ProfileResponse toResponse(Profile profile, List<String> dietaryRestrictions, String cnpj) {
+    public static ProfileResponse toResponse(Profile profile, List<String> dietaryRestrictions) {
         Address address = profile.getAddress();
         return new ProfileResponse(
                 profile.getId(),
@@ -22,7 +22,7 @@ public final class ProfileMapper {
                 profile.getProfileImageUrl(),
                 profile.getCreatedAt(),
                 profile.getPhones().stream().toList(),
-                toAddressResponse(address), dietaryRestrictions, cnpj);
+                toAddressResponse(address), dietaryRestrictions);
     }
 
     private static AddressResponse toAddressResponse(Address address) {

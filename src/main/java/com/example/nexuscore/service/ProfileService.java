@@ -8,11 +8,9 @@ import com.example.nexuscore.geo.GeoPoint;
 import com.example.nexuscore.geo.GeocodingService;
 import com.example.nexuscore.mapper.ProfileMapper;
 import com.example.nexuscore.model.Address;
-import com.example.nexuscore.model.Company;
 import com.example.nexuscore.model.Profile;
 import com.example.nexuscore.model.ProfileType;
 import com.example.nexuscore.repository.AddressRepository;
-import com.example.nexuscore.repository.CompanyRepository;
 import com.example.nexuscore.repository.ProfileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,22 +26,20 @@ public class ProfileService {
     private final AddressRepository addressRepository;
     private final GeocodingService geocodingService;
     private final ProfileRestrictionsCache restrictionsCache;
-    private final CompanyRepository companies;
 
     public ProfileService(ProfileRepository repository, AddressRepository addressRepository,
-                          GeocodingService geocodingService, ProfileRestrictionsCache restrictionsCache,
-                          CompanyRepository companies) {
+                          GeocodingService geocodingService, ProfileRestrictionsCache restrictionsCache) {
         this.repository = repository;
         this.addressRepository = addressRepository;
         this.geocodingService = geocodingService;
         this.restrictionsCache = restrictionsCache;
-        this.companies = companies;
     }
 
     public ProfileResponse get(Integer profileId) {
+        List<String> restrictions = restrictionsCache.get(profileId,
+                () -> findProfile(profileId).getDietaryRestrictions());
         Profile profile = findProfile(profileId);
-        List<String> restrictions = restrictionsCache.get(profileId, profile::getDietaryRestrictions);
-        return ProfileMapper.toResponse(profile, restrictions, companyCnpj(profileId, profile));
+        return ProfileMapper.toResponse(profile, restrictions);
     }
 
     @Transactional
@@ -65,14 +61,7 @@ public class ProfileService {
             restrictionsCache.invalidateAfterCommit(profileId);
         }
 
-        return ProfileMapper.toResponse(profile, profile.getDietaryRestrictions(), companyCnpj(profileId, profile));
-    }
-
-    private String companyCnpj(Integer profileId, Profile profile) {
-        if (profile.getType() != ProfileType.COMPANY) {
-            return null;
-        }
-        return companies.findByProfileId(profileId).map(Company::getCnpj).orElse(null);
+        return ProfileMapper.toResponse(profile, profile.getDietaryRestrictions());
     }
 
     private List<String> normalizeRestrictions(List<String> restrictions) {
