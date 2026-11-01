@@ -8,9 +8,15 @@ import com.example.nexuscore.dto.notification.NewStoreCandidate;
 import com.example.nexuscore.dto.notification.NewStoreProjection;
 import com.example.nexuscore.dto.notification.NotificationCandidatePage;
 import com.example.nexuscore.dto.notification.ProductNotificationCandidate;
+import com.example.nexuscore.dto.notification.ShoppingListNotificationCandidate;
 import com.example.nexuscore.model.Profile;
+import com.example.nexuscore.model.ProfileStatus;
+import com.example.nexuscore.model.ProfileType;
+import com.example.nexuscore.model.ShoppingList;
+import com.example.nexuscore.model.ShoppingListItem;
 import com.example.nexuscore.repository.PantryItemRepository;
 import com.example.nexuscore.repository.ProfileRepository;
+import com.example.nexuscore.repository.ShoppingListRepository;
 import com.example.nexuscore.repository.StoreRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -22,6 +28,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class NotificationCandidateService {
@@ -32,13 +41,16 @@ public class NotificationCandidateService {
     private final PantryItemRepository pantryItemRepository;
     private final ProfileRepository profileRepository;
     private final StoreRepository storeRepository;
+    private final ShoppingListRepository shoppingListRepository;
 
     public NotificationCandidateService(PantryItemRepository pantryItemRepository,
                                         ProfileRepository profileRepository,
-                                        StoreRepository storeRepository) {
+                                        StoreRepository storeRepository,
+                                        ShoppingListRepository shoppingListRepository) {
         this.pantryItemRepository = pantryItemRepository;
         this.profileRepository = profileRepository;
         this.storeRepository = storeRepository;
+        this.shoppingListRepository = shoppingListRepository;
     }
 
     public NotificationCandidatePage<ProductNotificationCandidate> products(
@@ -49,6 +61,27 @@ public class NotificationCandidateService {
                 .map(item -> new ProductNotificationCandidate(
                         item.getProfileId(), item.getItemId(), item.getFoodName(), item.getExpiryDate()));
         return new NotificationCandidatePage<>(candidates.getContent(), candidates.hasNext());
+    }
+
+    public NotificationCandidatePage<ShoppingListNotificationCandidate> shoppingLists(
+            LocalDate from, LocalDate to, int page, int size) {
+        validateRequest(from, to, page, size);
+        Slice<ShoppingList> lists = shoppingListRepository.findNotificationCandidates(from, to,
+                PageRequest.of(page, size, Sort.by("date", "id").ascending()));
+        List<Integer> profileIds = lists.getContent().stream().map(ShoppingList::getHouseholdId)
+                .filter(Objects::nonNull).distinct().toList();
+        Set<Integer> activeHouseholdIds = profileIds.isEmpty() ? Set.of()
+                : profileRepository.findByIdInAndStatus(profileIds, ProfileStatus.ACTIVE).stream()
+                        .filter(profile -> profile.getType() == ProfileType.HOUSEHOLD)
+                        .map(Profile::getId).collect(Collectors.toSet());
+        List<ShoppingListNotificationCandidate> content = lists.getContent().stream()
+                .filter(list -> list.getHouseholdId() != null
+                        && activeHouseholdIds.contains(list.getHouseholdId()))
+                .map(list -> new ShoppingListNotificationCandidate(list.getHouseholdId(), list.getId(),
+                        list.getTitle(), list.getDate(), !list.getArrayList().isEmpty()
+                                && list.getArrayList().stream().allMatch(ShoppingListItem::isChecked)))
+                .toList();
+        return new NotificationCandidatePage<>(content, lists.hasNext());
     }
 
     public NotificationCandidatePage<NearbyStoreCandidate> nearbyStores(double radiusKm, int page, int size) {

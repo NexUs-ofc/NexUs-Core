@@ -1,6 +1,7 @@
 package com.example.nexuscore.repository;
 
 import com.example.nexuscore.model.ShoppingList;
+import com.example.nexuscore.model.ShoppingListItem;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import org.bson.Document;
@@ -9,6 +10,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory;
 import java.time.LocalDate;
@@ -44,6 +48,42 @@ class ShoppingListRepositoryMongoTest {
     @BeforeEach
     void clearLists() {
         repository.deleteAll();
+    }
+
+    @Test
+    void selectsOnlyDatedListsInInclusiveWindowAndPreservesCompletionWithStablePagination() {
+        LocalDate from = LocalDate.of(2026, 10, 31);
+        LocalDate to = from.plusDays(7);
+        repository.save(new ShoppingList(12, "Sem data", null));
+        repository.save(new ShoppingList(12, "Antes", from.minusDays(1)));
+        repository.save(new ShoppingList(12, "Depois", to.plusDays(1)));
+        ShoppingList first = new ShoppingList(12, "Completa", from);
+        first.getArrayList().add(new ShoppingListItem(1, "Leite", 1.0, "UN", true));
+        first.getArrayList().add(new ShoppingListItem(2, "Arroz", 2.0, "UN", true));
+        first = repository.save(first);
+        ShoppingList second = new ShoppingList(12, "Parcial", from);
+        second.getArrayList().add(new ShoppingListItem(1, "Leite", 1.0, "UN", true));
+        second.getArrayList().add(new ShoppingListItem(2, "Arroz", 2.0, "UN", false));
+        second = repository.save(second);
+        ShoppingList last = repository.save(new ShoppingList(12, "No limite", to));
+
+        Slice<ShoppingList> page = repository.findNotificationCandidates(from, to,
+                PageRequest.of(0, 2, Sort.by("date", "id").ascending()));
+        Slice<ShoppingList> next = repository.findNotificationCandidates(from, to,
+                PageRequest.of(1, 2, Sort.by("date", "id").ascending()));
+
+        assertThat(page.getContent()).extracting(ShoppingList::getId)
+                .containsExactly(first.getId(), second.getId());
+        assertThat(page.hasNext()).isTrue();
+        assertThat(next.getContent()).extracting(ShoppingList::getId).containsExactly(last.getId());
+        assertThat(next.hasNext()).isFalse();
+        assertThat(page.getContent().get(0).getArrayList()).extracting(ShoppingListItem::isChecked)
+                .containsExactly(true, true);
+        assertThat(page.getContent().get(1).getArrayList()).extracting(ShoppingListItem::isChecked)
+                .containsExactly(true, false);
+        assertThat(page.getContent().get(0).getHouseholdId()).isEqualTo(12);
+        assertThat(page.getContent().get(0).getTitle()).isEqualTo("Completa");
+        assertThat(next.getContent().get(0).getDate()).isEqualTo(to);
     }
 
     @Test
