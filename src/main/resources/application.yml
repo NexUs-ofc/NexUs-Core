@@ -66,6 +66,12 @@ server:
   forward-headers-strategy: framework
 
 app:
+  rate-limit:
+    max-entries: ${RATE_LIMIT_MAX_ENTRIES:100000}
+    requests-per-minute: ${RATE_LIMIT_REQUESTS_PER_MINUTE:120}
+    writes-per-minute: ${RATE_LIMIT_WRITES_PER_MINUTE:30}
+    integration-per-minute: ${RATE_LIMIT_INTEGRATION_PER_MINUTE:600}
+    trusted-proxies: ${RATE_LIMIT_TRUSTED_PROXIES:}
   cloudinary:
     cloud-name: ${CLOUDINARY_CLOUD_NAME:}
     api-key: ${CLOUDINARY_API_KEY:}

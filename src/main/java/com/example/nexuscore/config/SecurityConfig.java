@@ -1,9 +1,15 @@
 package com.example.nexuscore.config;
 
+import com.example.nexuscore.ratelimit.ClientIpResolver;
+import com.example.nexuscore.ratelimit.InMemoryRateLimiter;
+import com.example.nexuscore.ratelimit.RateLimitConfiguration;
+import com.example.nexuscore.ratelimit.RateLimitFilter;
+import com.example.nexuscore.ratelimit.RateLimitProperties;
 import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,6 +20,7 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -26,6 +33,7 @@ import java.util.List;
 
 @Configuration
 @EnableMethodSecurity
+@Import(RateLimitConfiguration.class)
 public class SecurityConfig {
 
     @Bean
@@ -46,7 +54,11 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, JwtDecoder decoder,
-                                             CorsConfigurationSource corsConfigurationSource) throws Exception {
+                                             CorsConfigurationSource corsConfigurationSource,
+                                             InMemoryRateLimiter limiter,
+                                             RateLimitProperties limits,
+                                             ClientIpResolver clientIpResolver)
+            throws Exception {
         JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
         authorities.setAuthoritiesClaimName("profile_type");
         authorities.setAuthorityPrefix("ROLE_");
@@ -56,6 +68,8 @@ public class SecurityConfig {
         return http.cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterAfter(new RateLimitFilter(limiter, limits, clientIpResolver),
+                        BearerTokenAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(
