@@ -4,6 +4,7 @@ import com.example.nexuscore.dto.profile.AddressRequest;
 import com.example.nexuscore.dto.store.StoreCreateRequest;
 import com.example.nexuscore.dto.store.StoreResponse;
 import com.example.nexuscore.dto.store.StoreUpdateRequest;
+import com.example.nexuscore.exception.ConflictException;
 import com.example.nexuscore.exception.NotFoundException;
 import com.example.nexuscore.geo.GeoPoint;
 import com.example.nexuscore.geo.GeocodingService;
@@ -79,10 +80,10 @@ public class StoreService {
     public StoreResponse createCompanyStore(Integer profileId, StoreCreateRequest request) {
         Company company = companyService.companyOf(profileId);
         if (repository.existsByCnpj(request.cnpj())) {
-            throw new IllegalArgumentException("CNPJ ja cadastrado");
+            throw new ConflictException("CNPJ ja cadastrado");
         }
         if (profileRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Email ja cadastrado");
+            throw new ConflictException("Email ja cadastrado");
         }
         Address address = saveAddress(null, request.address());
         Profile storeProfile = profileRepository.save(new Profile(
@@ -103,7 +104,7 @@ public class StoreService {
         }
         if (request.cnpj() != null) {
             if (repository.existsByCnpjAndIdNot(request.cnpj(), store.getId())) {
-                throw new IllegalArgumentException("CNPJ ja cadastrado");
+                throw new ConflictException("CNPJ ja cadastrado");
             }
             store.setCnpj(request.cnpj());
         }
