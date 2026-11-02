@@ -5,6 +5,7 @@ import com.example.nexuscore.dto.store.StoreCreateRequest;
 import com.example.nexuscore.dto.store.StoreDistanceProjection;
 import com.example.nexuscore.dto.store.StoreResponse;
 import com.example.nexuscore.dto.store.StoreUpdateRequest;
+import com.example.nexuscore.exception.ConflictException;
 import com.example.nexuscore.geo.GeoPoint;
 import com.example.nexuscore.geo.GeocodingService;
 import com.example.nexuscore.model.Address;
@@ -44,6 +45,22 @@ class StoreServiceTest {
     private final GeocodingService geocodingService = mock(GeocodingService.class);
     private final StoreService service = new StoreService(
             repository, profileRepository, addressRepository, companyService, geocodingService);
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void rejectsDuplicateStoreIdentifiersAsConflicts(boolean duplicateCnpj) {
+        StoreCreateRequest request = new StoreCreateRequest(
+                "12345678000190", "loja@example.com", "Nova loja", List.of(),
+                new AddressRequest("Centro", "Rua A", "10", "01001000", "Sao Paulo", "SP"), null, null);
+        when(companyService.companyOf(12)).thenReturn(mock(Company.class));
+        when(repository.existsByCnpj(request.cnpj())).thenReturn(duplicateCnpj);
+        when(profileRepository.existsByEmail(request.email())).thenReturn(!duplicateCnpj);
+
+        assertThrows(ConflictException.class, () -> service.createCompanyStore(12, request));
+
+        verify(repository, never()).save(any());
+        verify(profileRepository, never()).save(any());
+    }
 
     @Test
     void createsCompanyStoreWithoutConsultingPlanOrStoreCount() {

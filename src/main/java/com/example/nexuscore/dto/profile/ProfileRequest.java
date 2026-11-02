@@ -1,12 +1,13 @@
 package com.example.nexuscore.dto.profile;
 
+import com.example.nexuscore.annotations.OptionalNotBlank;
 import com.example.nexuscore.annotations.TelephoneList;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public record ProfileRequest(
-        @Size(max = 150) String name,
+        @OptionalNotBlank @Size(max = 150) String name,
         @TelephoneList List<String> phones,
         @Valid AddressRequest address,
         @Size(max = 50) List<@jakarta.validation.constraints.NotBlank @Size(max = 100) String> dietaryRestrictions

@@ -3,6 +3,8 @@ package com.example.nexuscore.controller;
 import com.example.nexuscore.dto.recipe.RecipeResponse;
 import com.example.nexuscore.service.RecipeService;
 import com.example.nexuscore.util.CurrentProfileResolver;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
+@Tag(name = "Receitas")
 @RestController
 @RequestMapping("/api/recipes")
 public class RecipeController {
@@ -24,16 +27,22 @@ public class RecipeController {
         this.currentProfile = currentProfile;
     }
 
+    @Operation(summary = "Listar receitas salvas",
+            description = "Lista as receitas vinculadas ao perfil autenticado no MongoDB.")
     @GetMapping
     public List<RecipeResponse> listSaved() {
         return service.listSaved(currentProfile.profileId().intValue());
     }
 
+    @Operation(summary = "Consultar receita salva",
+            description = "Consulta uma receita acessível ao perfil autenticado.")
     @GetMapping("/{id}")
     public RecipeResponse getSaved(@PathVariable String id) {
         return service.getSaved(currentProfile.profileId().intValue(), id);
     }
 
+    @Operation(summary = "Remover receita salva",
+            description = "Remove o vínculo do perfil com a receita, preservando os demais proprietários.")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteSaved(@PathVariable String id) {

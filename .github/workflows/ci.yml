@@ -18,6 +18,19 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
+      postgresql:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: nexus_test
+          POSTGRES_PASSWORD: nexus_test
+          POSTGRES_DB: nexus_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nexus_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
       mongodb:
         image: mongo:8.2
         ports:
@@ -42,8 +55,11 @@ jobs:
       - name: Grant permission to Maven Wrapper
         run: chmod +x mvnw
 
-      - name: Run tests including MongoDB shopping list persistence
-        run: ./mvnw test -Dmongodb.test.uri=mongodb://localhost:27017
+      - name: Run tests including MongoDB persistence and PostgreSQL routines
+        run: >-
+          ./mvnw test
+          -Dmongodb.test.uri=mongodb://localhost:27017
+          -Dpostgresql.test.url=jdbc:postgresql://localhost:5432/nexus_test
 
   lint:
     name: Lint

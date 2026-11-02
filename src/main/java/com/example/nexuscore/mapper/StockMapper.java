@@ -2,6 +2,7 @@ package com.example.nexuscore.mapper;
 
 import com.example.nexuscore.dto.notification.ProductCandidateResponse;
 import com.example.nexuscore.dto.stock.FoodResponse;
+import com.example.nexuscore.dto.stock.MissingStockProjection;
 import com.example.nexuscore.dto.stock.PantryProductSettingResponse;
 import com.example.nexuscore.dto.stock.StockItemResponse;
 import com.example.nexuscore.model.Category;
@@ -43,6 +44,11 @@ public final class StockMapper {
                 setting.getFood().getName(),
                 setting.getFood().getFoodImageUrl(),
                 setting.getMinimumQuantity());
+    }
+
+    public static PantryProductSettingResponse toResponse(MissingStockProjection missing) {
+        return new PantryProductSettingResponse(
+                missing.getFoodId(), missing.getFoodName(), missing.getFoodImageUrl(), missing.getMinimumQuantity());
     }
 
     public static ProductCandidateResponse toNotificationCandidate(PantryItem item) {

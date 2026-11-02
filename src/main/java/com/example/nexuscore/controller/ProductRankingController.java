@@ -3,6 +3,8 @@ package com.example.nexuscore.controller;
 import com.example.nexuscore.dto.ranking.ProductRankingEntry;
 import com.example.nexuscore.model.RankingEventType;
 import com.example.nexuscore.service.ProductRankingService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.util.List;
 
+@Tag(name = "Rankings")
 @RestController
 @RequestMapping("/api/rankings/products")
 public class ProductRankingController {
@@ -21,6 +24,8 @@ public class ProductRankingController {
         this.rankingService = rankingService;
     }
 
+    @Operation(summary = "Consultar ranking de produtos",
+            description = "Aceita registered ou expired. A data exige UF e não aceita cidade.")
     @GetMapping("/{eventType}")
     public List<ProductRankingEntry> getRanking(
             @PathVariable String eventType,

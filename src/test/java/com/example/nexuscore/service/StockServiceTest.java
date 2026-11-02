@@ -1,9 +1,9 @@
 package com.example.nexuscore.service;
 
 import com.example.nexuscore.categorization.GpcCategoryResolver;
+import com.example.nexuscore.dto.stock.MissingStockProjection;
 import com.example.nexuscore.dto.stock.PantryProductSettingResponse;
 import com.example.nexuscore.model.Food;
-import com.example.nexuscore.model.PantryProductSetting;
 import com.example.nexuscore.model.PantryItem;
 import com.example.nexuscore.model.Profile;
 import com.example.nexuscore.repository.CategoryRepository;
@@ -16,10 +16,10 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.never;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -51,12 +51,10 @@ class StockServiceTest {
         StockService service = new StockService(items, settings, mock(FoodRepository.class),
                 mock(CategoryRepository.class), mock(ProfileRepository.class), mock(GpcCategoryResolver.class),
                 mock(ProductRankingService.class), mock(ActivityRecordService.class));
-        Food food = mock(Food.class);
-        PantryProductSetting setting = mock(PantryProductSetting.class);
-        when(food.getId()).thenReturn(7);
-        when(food.getName()).thenReturn("Arroz");
-        when(food.getFoodImageUrl()).thenReturn("https://example.com/arroz.jpg");
-        when(setting.getFood()).thenReturn(food);
+        MissingStockProjection setting = mock(MissingStockProjection.class);
+        when(setting.getFoodId()).thenReturn(7);
+        when(setting.getFoodName()).thenReturn("Arroz");
+        when(setting.getFoodImageUrl()).thenReturn("https://example.com/arroz.jpg");
         when(setting.getMinimumQuantity()).thenReturn(2);
         when(settings.findMissingByProfileId(12)).thenReturn(List.of(setting));
 
