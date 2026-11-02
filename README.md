@@ -95,8 +95,6 @@ flowchart LR
 | Redis                         | Rankings de produtos, controle de duplicidade dos eventos de ranking e cache de restrições alimentares                   |
 | Cloudinary                    | Armazenamento das imagens enviadas pelas rotas de perfil e lojas                                                         |
 
-O Core não possui integração direta com Neo4j nesta implementação.
-
 ## Tecnologias
 
 | Tecnologia                        | Utilização                                |
@@ -709,7 +707,7 @@ GET /api/stores/nearby?latitude=-23.5505&longitude=-46.6333&radiusKm=5
 - O perfil de destino deve estar ativo e ser `HOUSEHOLD`, `STORE` ou `COMPANY`.
 - A empresa só pode alterar imagens de lojas próprias.
 
-A remoção limpa a URL do perfil no banco. Ela não exclui o arquivo armazenado no Cloudinary.
+A remoção limpa a URL do perfil no banco. 
 
 ## Integração com o Notify
 
@@ -1087,8 +1085,6 @@ NexUs-Core/
 
 - O schema PostgreSQL é gerenciado externamente; o Core não executa migrations automaticamente.
 - Operações envolvendo PostgreSQL, MongoDB, Redis e Cloudinary não constituem uma única transação distribuída.
-- Uma falha em uma integração pode ocorrer depois de outra persistência já ter sido concluída. A repetição de escritas exige atenção ao estado final do recurso.
-- Rankings acumulados e marcadores de duplicidade no Redis precisam de persistência e planejamento de retenção.
 - Os contadores de rate limit e as amostras administrativas são locais a cada instância.
 - A exclusão de uma imagem do perfil não remove o arquivo do Cloudinary.
 - A rota de pagamento registra uma mudança de estado; não realiza uma transação financeira.
