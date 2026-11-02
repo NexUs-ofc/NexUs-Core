@@ -1000,10 +1000,10 @@ O nome do artefato acompanha a versão definida no `pom.xml`.
 
 ### Imagem Docker
 
-O projeto utiliza `Dockerfile.vercel` como arquivo de build da imagem:
+O projeto utiliza `Dockerfile` como arquivo de build da imagem:
 
 ```bash
-docker build -f Dockerfile.vercel -t nexus-core:local .
+docker build -f Dockerfile -t nexus-core:local .
 ```
 
 O build é realizado em múltiplos estágios. A imagem final utiliza Java 17 e executa a aplicação com um usuário sem privilégios de root.
@@ -1019,13 +1019,9 @@ Os workflows do GitHub Actions incluem:
 - Checkstyle.
 - Compilação e empacotamento.
 
-### AWS ECR / EKS
+### Containers e Kubernetes portáteis
 
-O workflow principal possui implantação no EKS após um push na `main`, condicionada à aprovação dos jobs de testes, estilo e build.
-
-Esse fluxo depende das credenciais AWS, do repositório ECR, do cluster, do namespace e do Deployment previamente configurados.
-
-O manifesto Kubernetes define duas réplicas, probes de saúde e leitura das variáveis a partir do Secret `nexus-core-secret`.
+O build da imagem e a renderização dos manifests são verificados pelo workflow `containers.yml`, sem publicação ou deploy automático. O workflow Java executa testes, estilo e build. Para implantação em qualquer cluster, consulte [o guia operacional](docs/containers.md).
 
 ### Discloud
 
@@ -1073,7 +1069,7 @@ NexUs-Core/
 │   │       └── categorization/
 │   └── test/
 ├── .env.example
-├── Dockerfile.vercel
+├── Dockerfile
 ├── docker-compose.yml
 ├── discloud.config
 ├── ceris-logical-model.dbml
@@ -1115,3 +1111,7 @@ NexUs-Core/
 Distribuído sob a [licença MIT](https://github.com/NexUs-ofc/NexUs-Core/blob/main/LICENSE).
 
 Copyright © 2026 NexUs.
+
+## Containers e Kubernetes
+
+Consulte o [guia de containers e Kubernetes](docs/containers.md) para build, configuração e execução em qualquer cluster.
