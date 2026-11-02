@@ -1,5 +1,8 @@
 package com.example.nexuscore.config;
 
+import com.example.nexuscore.ratelimit.InMemoryRateLimiter;
+import com.example.nexuscore.ratelimit.IntegrationRateLimitFilter;
+import com.example.nexuscore.ratelimit.RateLimitProperties;
 import com.example.nexuscore.security.NotifyTokenFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +19,8 @@ public class NotificationIntegrationSecurityConfig {
     @Bean
     @Order(1)
     SecurityFilterChain notificationIntegrationFilterChain(HttpSecurity http,
-                                                           NotificationIntegrationProperties properties)
+                                                           NotificationIntegrationProperties properties,
+                                                           InMemoryRateLimiter limiter, RateLimitProperties limits)
             throws Exception {
         return http.securityMatcher("/internal/notifications/**")
                 .csrf(csrf -> csrf.disable())
@@ -29,6 +33,7 @@ public class NotificationIntegrationSecurityConfig {
                         .hasAuthority(NotifyTokenFilter.AUTHORITY)
                         .anyRequest().denyAll())
                 .addFilterBefore(new NotifyTokenFilter(properties.token()), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new IntegrationRateLimitFilter(limiter, limits), NotifyTokenFilter.class)
                 .build();
     }
 }
